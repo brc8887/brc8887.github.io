@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>故事相冊 Prototype</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260529-create-helper" />
   </head>
   <body>
     <section class="onboarding" id="onboarding">
@@ -62,6 +62,16 @@
         </form>
       </div>
     </section>
+
+    <aside class="login-helper" id="loginHelper" aria-live="polite" style="position: fixed; left: max(22px, calc(50vw - 600px)); bottom: 0; z-index: 8;">
+      <button class="login-helper-avatar" id="loginHelperAvatar" type="button" aria-label="打開阿義小助手" style="width: 124px; height: 112px; padding: 0; overflow: hidden; background: transparent; border: 0;">
+        <img src="assets/%E9%98%BF%E7%BE%A9.png" alt="阿義小助手" style="width: 124px; height: 124px; object-fit: contain; object-position: center top; display: block;" />
+      </button>
+      <div class="login-helper-bubble" style="max-width: 380px;">
+        <button class="login-helper-close" id="loginHelperClose" type="button" aria-label="收合阿義小助手">×</button>
+        <p id="loginHelperText">請問策展人，觀眾們應該怎麼稱呼您？</p>
+      </div>
+    </aside>
 
     <header class="app-header app-shell">
       <div>
@@ -132,27 +142,32 @@
             </section>
 
             <section class="create-step" data-step="1">
-              <div class="panel story-form-panel">
-                <label>
-                  這張照片的標題
-                  <input id="storyTitle" type="text" placeholder="例如：杜鵑花" />
-                </label>
-                <label>
-                  一兩句故事主軸
-                  <textarea id="storySummary" rows="5" placeholder="例如：這張照片是我以前在家門口種的杜鵑花，每年春天都會開。"></textarea>
-                </label>
-                <div class="recorder">
-                  <div>
-                    <strong>錄音</strong>
-                    <p id="recordHint">先按「開始錄故事」，講完後按「停止並存下來」。</p>
-                    <p class="record-status" id="recordStatus">尚未錄音</p>
+              <div class="create-story-layout">
+                <div class="create-photo-preview">
+                  <img id="createSelectedPreview" alt="已上傳照片預覽" />
+                </div>
+                <div class="panel story-form-panel">
+                  <label>
+                    這張照片的標題
+                    <input id="storyTitle" type="text" placeholder="例如：杜鵑花" />
+                  </label>
+                  <label>
+                    一兩句故事主軸
+                    <textarea id="storySummary" rows="5" placeholder="例如：這張照片是我以前在家門口種的杜鵑花，每年春天都會開。"></textarea>
+                  </label>
+                  <div class="recorder">
+                    <div>
+                      <strong>錄音</strong>
+                      <p id="recordHint">先按「開始錄故事」，講完後按「停止並存下來」。</p>
+                      <p class="record-status" id="recordStatus">尚未錄音</p>
+                    </div>
+                    <div class="record-actions">
+                      <button class="primary-btn" id="recordBtn" type="button">開始錄故事</button>
+                      <button class="danger-btn" id="stopRecordBtn" type="button" disabled>停止並存下來</button>
+                      <button class="ghost-btn" id="clearAudioBtn" type="button">清除錄音</button>
+                    </div>
+                    <audio id="audioPlayback" controls></audio>
                   </div>
-                  <div class="record-actions">
-                    <button class="primary-btn" id="recordBtn" type="button">開始錄故事</button>
-                    <button class="danger-btn" id="stopRecordBtn" type="button" disabled>停止並存下來</button>
-                    <button class="ghost-btn" id="clearAudioBtn" type="button">清除錄音</button>
-                  </div>
-                  <audio id="audioPlayback" controls></audio>
                 </div>
               </div>
             </section>
@@ -404,8 +419,14 @@
       </article>
     </template>
 
-    <button class="test-reset-btn" id="reLoginBtn" type="button">測試用：重新登錄</button>
-    <button class="test-audience-btn" id="audienceToggleBtn" type="button">測試用：觀眾視角</button>
+    <div class="test-toolbox" id="testToolbox">
+      <button class="test-toolbox-toggle" id="testToolboxToggle" type="button" aria-label="開啟測試工具" aria-expanded="false">🔧</button>
+      <div class="test-toolbox-menu">
+        <button class="test-reset-btn" id="reLoginBtn" type="button">測試用：重新登錄</button>
+        <button class="test-audience-btn" id="audienceToggleBtn" type="button">測試用：觀眾視角</button>
+        <button class="test-curator2-btn" id="curatorTwoBtn" type="button">測試用：策展人二</button>
+      </div>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>
