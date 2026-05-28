@@ -16,6 +16,7 @@ const state = {
   online: false,
   scrapbookPage: 0,
   audiencePage: 0,
+  readonlySource: "audience",
   editingDiaryId: null,
   interestedStoryId: null,
   unlockedDiaryIds: [],
@@ -40,6 +41,21 @@ const defaultStories = [
   },
 ];
 
+const curatorTwoStories = [
+  {
+    id: "curator2-shida-wenyuan",
+    title: "師大文學院",
+    summary: "這是師大文學院，很大一棟每次去上課都會迷路",
+    image: "assets/shida-wenyuan.jpg",
+    audio: null,
+    diary:
+      "這是師大文學院，其實是兩棟建築物組成的，但是兩棟建築物只有某幾層樓相連，所以搭電梯如果沒有搭到正確的樓層，就要再上上下下，每次去圖資所上課搭電梯都迷路，所以我都走樓梯到五樓。",
+    keywords: ["師大", "文學院", "迷路"],
+    today: true,
+    createdAt: "2026-05-29T00:00:00.000Z",
+  },
+];
+
 const els = {
   appShell: document.querySelectorAll(".app-shell"),
   onboarding: document.querySelector("#onboarding"),
@@ -54,8 +70,15 @@ const els = {
   birthdayHint: document.querySelector("#birthdayHint"),
   loginBackBtn: document.querySelector("#loginBackBtn"),
   loginNextBtn: document.querySelector("#loginNextBtn"),
+  loginHelper: document.querySelector("#loginHelper"),
+  loginHelperAvatar: document.querySelector("#loginHelperAvatar"),
+  loginHelperClose: document.querySelector("#loginHelperClose"),
+  loginHelperText: document.querySelector("#loginHelperText"),
+  testToolbox: document.querySelector("#testToolbox"),
+  testToolboxToggle: document.querySelector("#testToolboxToggle"),
   reLoginBtn: document.querySelector("#reLoginBtn"),
   audienceToggleBtn: document.querySelector("#audienceToggleBtn"),
+  curatorTwoBtn: document.querySelector("#curatorTwoBtn"),
   navButtons: document.querySelectorAll(".nav-btn"),
   views: document.querySelectorAll(".view"),
   onlineStatus: document.querySelector("#onlineStatus"),
@@ -72,6 +95,7 @@ const els = {
   saveStoryBtn: document.querySelector("#saveStoryBtn"),
   cancelStoryBtn: document.querySelector("#cancelStoryBtn"),
   storyPreviewImage: document.querySelector("#storyPreviewImage"),
+  createSelectedPreview: document.querySelector("#createSelectedPreview"),
   storyPreviewTitle: document.querySelector("#storyPreviewTitle"),
   storyPreviewNoteTitle: document.querySelector("#storyPreviewNoteTitle"),
   storyPreviewSummary: document.querySelector("#storyPreviewSummary"),
@@ -204,6 +228,17 @@ function ensureDefaultStories() {
   if (changed) saveState();
 }
 
+function getCuratorTwoStories() {
+  return curatorTwoStories.map((story) => ({
+    ...story,
+    audio: story.audio || makeSilentWavDataUrl(2),
+  }));
+}
+
+function getReadonlyStories() {
+  return state.readonlySource === "curator2" ? getCuratorTwoStories() : state.stories;
+}
+
 function saveState() {
   localStorage.setItem(
     storageKey,
@@ -219,8 +254,10 @@ function saveState() {
 }
 
 function showView(id) {
+  document.body.classList.remove("onboarding-mode");
   document.body.classList.toggle("classroom-mode", id === "classroom");
   document.body.classList.toggle("audience-mode", id === "audience");
+  document.body.classList.toggle("curator2-mode", id === "audience" && state.readonlySource === "curator2");
   document.body.classList.toggle("create-mode", id === "create");
   document.body.classList.toggle("diary-mode", id === "diary");
   els.views.forEach((view) => view.classList.toggle("active", view.id === id));
@@ -231,7 +268,13 @@ function showView(id) {
   if (id === "audience") renderSearch();
   if (id === "create") showCreateStep(0);
   els.audienceToggleBtn.textContent =
-    id === "audience" ? "測試用：回到策展人視角" : "測試用：觀眾視角";
+    id === "audience" && state.readonlySource === "audience"
+      ? "測試用：回到策展人視角"
+      : "測試用：觀眾視角";
+  els.curatorTwoBtn.textContent =
+    id === "audience" && state.readonlySource === "curator2"
+      ? "測試用：回到策展人視角"
+      : "測試用：策展人二";
 }
 
 function showCreateStep(step) {
@@ -247,7 +290,35 @@ function showCreateStep(step) {
   els.createBackBtn.disabled = state.createStep === 0;
   els.createNextBtn.classList.toggle("is-hidden", state.createStep === 2);
   els.saveStoryBtn.classList.toggle("is-hidden", state.createStep !== 2);
+  updateCreateHelperText();
+  updateCreateSelectedPreview();
   if (state.createStep === 2) renderStoryPreview();
+}
+
+function updateCreateHelperText() {
+  if (!els.loginHelperText) return;
+  if (state.createStep === 0) {
+    els.loginHelperText.textContent = state.selectedImage
+      ? "照片新增成功！這張照片好有趣，不知道策展人有什麼故事？"
+      : "請策展人幫我點一下中間藍色的＋符號，選一張你想要展示的照片！";
+    return;
+  }
+  if (state.createStep === 1) {
+    els.loginHelperText.textContent = "請策展人幫我用一兩句話形容你覺得這張照片最特別、最有趣的地方！";
+    return;
+  }
+  els.loginHelperText.textContent = "策展人準備好把它加入相冊、分享它的故事了嗎？";
+}
+
+function updateCreateSelectedPreview() {
+  if (!els.createSelectedPreview) return;
+  if (state.selectedImage) {
+    els.createSelectedPreview.src = state.selectedImage.src;
+    els.createSelectedPreview.alt = state.selectedImage.name || "已上傳照片預覽";
+  } else {
+    els.createSelectedPreview.removeAttribute("src");
+    els.createSelectedPreview.alt = "尚未選擇照片";
+  }
 }
 
 function resetStoryDraft() {
@@ -306,6 +377,11 @@ function renderStoryPreview() {
 
 function showLoginStep(step) {
   state.loginStep = Math.max(0, Math.min(2, step));
+  const helperLines = [
+    "請問策展人，觀眾們應該怎麼稱呼您？",
+    "請問策展人的性別是？",
+    "請問策展人的生日是？",
+  ];
   els.loginSteps.forEach((panel) => {
     panel.classList.toggle("active", Number(panel.dataset.step) === state.loginStep);
   });
@@ -314,32 +390,35 @@ function showLoginStep(step) {
     crumb.classList.toggle("active", crumbStep === state.loginStep);
     crumb.classList.toggle("done", crumbStep < state.loginStep);
   });
+  if (els.loginHelperText) els.loginHelperText.textContent = helperLines[state.loginStep];
   els.loginBackBtn.disabled = state.loginStep === 0;
   els.loginNextBtn.textContent = state.loginStep === 2 ? "完成，進入相冊" : "下一步";
 }
 
 function showOnboarding() {
+  document.body.classList.add("onboarding-mode");
   document.body.classList.remove("classroom-mode");
   document.body.classList.remove("audience-mode");
+  document.body.classList.remove("curator2-mode");
   document.body.classList.remove("create-mode");
   document.body.classList.remove("diary-mode");
   els.onboarding.classList.remove("is-hidden");
   els.appShell.forEach((node) => node.classList.add("is-hidden"));
-  els.reLoginBtn.classList.add("is-hidden");
-  els.audienceToggleBtn.classList.add("is-hidden");
+  els.testToolbox.classList.add("is-hidden");
   els.loginName.value = "";
   showLoginStep(0);
 }
 
 function showApp() {
+  document.body.classList.remove("onboarding-mode");
   document.body.classList.remove("classroom-mode");
   document.body.classList.remove("audience-mode");
+  document.body.classList.remove("curator2-mode");
   document.body.classList.remove("create-mode");
   document.body.classList.remove("diary-mode");
   els.onboarding.classList.add("is-hidden");
   els.appShell.forEach((node) => node.classList.remove("is-hidden"));
-  els.reLoginBtn.classList.remove("is-hidden");
-  els.audienceToggleBtn.classList.remove("is-hidden");
+  els.testToolbox.classList.remove("is-hidden");
   showView("gallery");
 }
 
@@ -457,6 +536,8 @@ async function handleImages(files) {
   state.imageDrafts = drafts;
   state.selectedImage = drafts[0] || null;
   renderPreviews();
+  updateCreateHelperText();
+  updateCreateSelectedPreview();
 }
 
 async function pasteImagesToScrapbook(files) {
@@ -496,6 +577,8 @@ function renderPreviews() {
     button.addEventListener("click", () => {
       state.selectedImage = image;
       renderPreviews();
+      updateCreateHelperText();
+      updateCreateSelectedPreview();
     });
     els.previewStrip.append(button);
   });
@@ -913,6 +996,7 @@ function startDiaryDictation() {
 function makeReadonlyScrapbookPage(story) {
   const page = document.createElement("article");
   page.className = "scrapbook-page readonly-page";
+  const isCuratorTwo = state.readonlySource === "curator2";
   page.innerHTML = `
     <div class="scrapbook-photo-card">
       <div class="photo-card-inner">
@@ -922,7 +1006,7 @@ function makeReadonlyScrapbookPage(story) {
             <div class="scrapbook-caption">
               <h3>${story.title}</h3>
               <div class="caption-actions">
-                <button class="tag-pill interest-btn" type="button">有興趣</button>
+                ${isCuratorTwo ? "" : '<button class="tag-pill interest-btn" type="button">有興趣</button>'}
                 <button class="ghost-btn small audience-diary-btn" type="button">閱讀日記</button>
               </div>
             </div>
@@ -933,7 +1017,9 @@ function makeReadonlyScrapbookPage(story) {
             <div class="scrapbook-caption diary-back-caption">
               <h3>${escapeHtml(story.title)}</h3>
               <div class="caption-actions">
-                <span class="tag-pill unlock-pill">${escapeHtml(getUnlockLabel(story.id))}</span>
+                <span class="tag-pill unlock-pill">${escapeHtml(
+                  isCuratorTwo ? "另一位策展人的日記" : getUnlockLabel(story.id)
+                )}</span>
                 <button class="ghost-btn small" data-diary-action="front" type="button">欣賞照片</button>
               </div>
             </div>
@@ -948,7 +1034,7 @@ function makeReadonlyScrapbookPage(story) {
     </div>
     <div class="scrapbook-audio"></div>
   `;
-  page.querySelector(".interest-btn").addEventListener("click", () => {
+  page.querySelector(".interest-btn")?.addEventListener("click", () => {
     state.interestedStoryId = story.id;
     saveState();
     showView("messages");
@@ -958,7 +1044,7 @@ function makeReadonlyScrapbookPage(story) {
       alert("這張照片目前還沒有日記內容。");
       return;
     }
-    if (!isDiaryUnlocked(story.id)) {
+    if (!isCuratorTwo && !isDiaryUnlocked(story.id)) {
       alert("對這張照片有興趣嗎？和策展人聊過它的故事後即可解鎖照片的日記內容！");
       return;
     }
@@ -1051,11 +1137,12 @@ function showAudienceSearch() {
 }
 
 function renderAudienceBook() {
+  const sourceStories = getReadonlyStories();
   els.audienceScrapbookSpread.innerHTML = "";
-  const pageCount = Math.max(1, Math.ceil(state.stories.length / 2));
+  const pageCount = Math.max(1, Math.ceil(sourceStories.length / 2));
   state.audiencePage = Math.min(state.audiencePage, pageCount - 1);
   const start = state.audiencePage * 2;
-  const spreadStories = state.stories.slice(start, start + 2);
+  const spreadStories = sourceStories.slice(start, start + 2);
   for (let slot = 0; slot < 2; slot += 1) {
     const story = spreadStories[slot];
     els.audienceScrapbookSpread.append(story ? makeReadonlyScrapbookPage(story) : makeReadonlyEmptyPage());
@@ -1096,7 +1183,9 @@ function renderLive() {
 
 function renderSearch() {
   const query = els.searchInput.value.trim().toLowerCase();
-  const pool = state.online
+  const pool = state.readonlySource === "curator2"
+    ? getCuratorTwoStories().map((story, index) => ({ story, index }))
+    : state.online
     ? state.stories.map((story, index) => ({ story, index })).filter((item) => item.story.today)
     : [];
   const results = pool.filter(({ story }) => {
@@ -1106,7 +1195,9 @@ function renderSearch() {
   els.searchResults.innerHTML = "";
   results.forEach(({ story, index }) => els.searchResults.append(renderStoryCard(story, index, "search")));
   if (!results.length) {
-    els.searchResults.innerHTML = `<p class="empty-state">${state.online ? "沒有符合的照片。" : "長輩目前離線，所以搜尋頁不顯示課程。"}</p>`;
+    els.searchResults.innerHTML = `<p class="empty-state">${
+      state.readonlySource === "curator2" || state.online ? "沒有符合的照片。" : "長輩目前離線，所以搜尋頁不顯示課程。"
+    }</p>`;
   }
   if (!els.audienceBookPanel.classList.contains("is-hidden")) renderAudienceBook();
 }
@@ -1302,6 +1393,19 @@ function translateDemo() {
 function bindEvents() {
   els.loginForm.addEventListener("submit", handleLoginSubmit);
   els.loginBackBtn.addEventListener("click", () => showLoginStep(state.loginStep - 1));
+  els.loginHelperClose.addEventListener("click", () => {
+    els.loginHelper.classList.add("is-collapsed");
+    els.loginHelperAvatar.setAttribute("aria-label", "打開阿義小助手");
+  });
+  els.loginHelperAvatar.addEventListener("click", () => {
+    els.loginHelper.classList.remove("is-collapsed");
+    els.loginHelperAvatar.setAttribute("aria-label", "阿義小助手已展開");
+  });
+  els.testToolboxToggle.addEventListener("click", () => {
+    const isOpen = els.testToolbox.classList.toggle("is-open");
+    els.testToolboxToggle.setAttribute("aria-expanded", String(isOpen));
+    els.testToolboxToggle.setAttribute("aria-label", isOpen ? "收合測試工具" : "開啟測試工具");
+  });
   els.birthYear.addEventListener("change", updateBirthdayDays);
   els.birthMonth.addEventListener("change", updateBirthdayDays);
   els.loginCrumbs.forEach((crumb) => {
@@ -1313,11 +1417,21 @@ function bindEvents() {
     showOnboarding();
   });
   els.audienceToggleBtn.addEventListener("click", () => {
-    if (document.body.classList.contains("audience-mode")) {
+    if (document.body.classList.contains("audience-mode") && state.readonlySource === "audience") {
       showView("gallery");
     } else {
+      state.readonlySource = "audience";
       showAudienceSearch();
       showView("audience");
+    }
+  });
+  els.curatorTwoBtn.addEventListener("click", () => {
+    if (document.body.classList.contains("audience-mode") && state.readonlySource === "curator2") {
+      showView("gallery");
+    } else {
+      state.readonlySource = "curator2";
+      showView("audience");
+      openAudienceBook(0);
     }
   });
   els.navButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
@@ -1378,7 +1492,7 @@ function bindEvents() {
     renderAudienceBook();
   });
   els.audienceNextPageBtn.addEventListener("click", () => {
-    const maxPage = Math.max(0, Math.ceil(state.stories.length / 2) - 1);
+    const maxPage = Math.max(0, Math.ceil(getReadonlyStories().length / 2) - 1);
     state.audiencePage = Math.min(maxPage, state.audiencePage + 1);
     renderAudienceBook();
   });
