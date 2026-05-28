@@ -21,7 +21,7 @@
           <section class="login-step active" data-step="0">
             <label>
               您希望大家怎麼稱呼您？
-              <input id="loginName" type="text" value="陳阿姨" autocomplete="name" />
+              <input id="loginName" type="text" autocomplete="name" />
             </label>
           </section>
           <section class="login-step" data-step="1">
@@ -252,6 +252,42 @@
         </div>
       </section>
 
+      <section class="view" id="diary">
+        <div class="page-band">
+          <p class="section-label">照片背面的日記</p>
+          <h2 id="diaryEditorTitle">新增日記</h2>
+          <div class="diary-editor">
+            <div class="diary-photo-panel scrapbook-photo-card" id="diaryPreviewCard">
+              <div class="photo-card-inner">
+                <div class="photo-card-face photo-card-front">
+                  <div class="scrapbook-photo-wrap">
+                    <img id="diaryEditorImage" alt="日記照片" />
+                  </div>
+                </div>
+                <div class="photo-card-face photo-card-back">
+                  <div class="photo-back diary-editor-back">
+                    <h3 id="diaryPreviewTitle"></h3>
+                    <div class="diary-back-text" id="diaryPreviewText"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel diary-writing-panel">
+              <label>
+                寫下這張照片背後想留下的日記
+                <textarea id="diaryText" rows="10" placeholder="可以寫今天想到的回憶、補充故事、或想留給之後再看的話。"></textarea>
+              </label>
+              <div class="diary-actions">
+                <button class="ghost-btn" id="diaryVoiceBtn" type="button">語音輸入</button>
+                <button class="ghost-btn" id="diaryCancelBtn" type="button">取消</button>
+                <button class="secondary-btn" id="diaryPreviewBtn" type="button">預覽</button>
+                <button class="primary-btn" id="diarySaveBtn" type="button">儲存日記</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="live">
         <div class="page-band two-col">
           <div>
@@ -314,6 +350,7 @@
               <div class="bubble elder">可以，我今天上線，先聊 15 分鐘。</div>
             </div>
             <form class="chat-form" id="chatForm">
+              <button class="ghost-btn mic-btn" id="chatMicBtn" type="button" aria-label="錄製語音訊息">🎙</button>
               <input id="chatInput" type="text" placeholder="輸入回覆..." />
               <button class="secondary-btn" type="submit">送出</button>
             </form>
