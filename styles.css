@@ -29,12 +29,10 @@ body {
 .is-hidden,
 .classroom-mode .app-header,
 .classroom-mode .step-nav,
-.classroom-mode .test-reset-btn,
-.classroom-mode .test-audience-btn,
+.classroom-mode .test-toolbox,
 .create-mode .step-nav,
 .audience-mode .app-header,
 .audience-mode .step-nav,
-.audience-mode .test-reset-btn,
 .app-shell.is-hidden,
 .onboarding.is-hidden {
   display: none;
@@ -65,6 +63,99 @@ body {
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: var(--shadow);
+}
+
+.login-helper {
+  position: fixed;
+  left: max(22px, calc(50vw - 600px));
+  bottom: 0;
+  z-index: 8;
+  display: none;
+  grid-template-columns: 124px minmax(240px, 380px);
+  align-items: end;
+  gap: 14px;
+  max-width: min(92vw, 540px);
+  pointer-events: none;
+}
+
+.onboarding-mode .login-helper,
+.create-mode .login-helper {
+  display: grid;
+}
+
+.login-helper-avatar {
+  width: 124px;
+  height: 112px;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  transform: translateY(8px);
+  transition: transform 0.25s ease;
+  pointer-events: auto;
+}
+
+.login-helper-avatar img {
+  width: 124px;
+  height: 124px;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+}
+
+.login-helper-bubble {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 16px 44px 16px 18px;
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(20, 30, 40, 0.14);
+  font-weight: 900;
+  pointer-events: auto;
+}
+
+.login-helper-bubble::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  bottom: 24px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-left: 2px solid var(--line);
+  border-bottom: 2px solid var(--line);
+  transform: rotate(45deg);
+}
+
+.login-helper p {
+  margin: 0;
+}
+
+.login-helper-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.login-helper.is-collapsed .login-helper-bubble {
+  display: none;
+}
+
+.login-helper.is-collapsed .login-helper-avatar {
+  height: 46px !important;
+  transform: translateY(0) !important;
 }
 
 .breadcrumb {
@@ -119,6 +210,33 @@ body {
   max-width: 760px;
 }
 
+.create-story-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.15fr);
+  gap: clamp(22px, 4vw, 48px);
+  align-items: start;
+  max-width: 1120px;
+  margin-left: auto;
+}
+
+.create-photo-preview {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #e2dccd;
+  border-radius: 4px;
+  box-shadow: 0 10px 22px rgba(35, 29, 23, 0.18);
+  transform: rotate(-1deg);
+}
+
+.create-photo-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #ddd;
+}
+
 .create-actions {
   display: flex;
   justify-content: flex-end;
@@ -164,11 +282,51 @@ body {
   margin-top: 20px;
 }
 
-.test-reset-btn,
-.test-audience-btn {
+.test-toolbox {
   position: fixed;
+  left: 16px;
   bottom: 16px;
   z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.test-toolbox-toggle {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(20, 30, 40, 0.14);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.test-toolbox.is-open .test-toolbox-toggle {
+  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.test-toolbox-menu {
+  display: none;
+  align-items: flex-end;
+  gap: 8px;
+  padding-bottom: 1px;
+}
+
+.test-toolbox.is-open .test-toolbox-menu {
+  display: flex;
+}
+
+.test-reset-btn,
+.test-audience-btn,
+.test-curator2-btn {
   min-height: 44px;
   padding: 8px 12px;
   color: var(--ink);
@@ -180,16 +338,8 @@ body {
   font-weight: 900;
 }
 
-.test-reset-btn {
-  left: 16px;
-  bottom: 68px;
-}
-
-.test-audience-btn {
-  left: 16px;
-}
-
-.audience-mode .test-audience-btn {
+.audience-mode .test-audience-btn,
+.curator2-mode .test-curator2-btn {
   background: var(--blue);
   border-color: var(--blue);
   color: #fff;
@@ -1186,6 +1336,7 @@ audio {
 
   .two-col,
   .create-grid,
+  .create-story-layout,
   .messages-layout,
   .classroom {
     grid-template-columns: 1fr;
