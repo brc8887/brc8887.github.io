@@ -1,6 +1,6 @@
 const state = {
   profile: {
-    name: "陳阿姨",
+    name: "",
     gender: "",
     birthday: "",
     language: "國語為主，可以穿插台語",
@@ -16,11 +16,29 @@ const state = {
   online: false,
   scrapbookPage: 0,
   audiencePage: 0,
+  editingDiaryId: null,
+  interestedStoryId: null,
+  unlockedDiaryIds: [],
   timerId: null,
   secondsLeft: 15 * 60,
 };
 
 const storageKey = "story-album-prototype-v1";
+
+const defaultStories = [
+  {
+    id: "default-dujuanhua",
+    title: "杜鵑花",
+    summary: "這個是臺大校園裡面的杜鵑花，之前校友重聚回去臺大的時候拍的",
+    image: "assets/dujuanhua.jpg",
+    audio: null,
+    diary:
+      "這是臺大校園裡面的杜鵑花，之前校友重聚的時候回去臺大拍的，臺大校園裡面很多杜鵑花，每次開完之後地上都會掉一堆，白色的就特別像衛生紙。校友重聚之後參觀了臺大在校門口那邊新蓋的人文館，以前是我們的系館洞洞館。",
+    keywords: ["杜鵑花", "臺大", "校園", "校友", "重聚"],
+    today: true,
+    createdAt: "2026-05-28T00:00:00.000Z",
+  },
+];
 
 const els = {
   appShell: document.querySelectorAll(".app-shell"),
@@ -75,6 +93,16 @@ const els = {
   nextPageBtn: document.querySelector("#nextPageBtn"),
   pageIndicator: document.querySelector("#pageIndicator"),
   emptyGallery: document.querySelector("#emptyGallery"),
+  diaryEditorTitle: document.querySelector("#diaryEditorTitle"),
+  diaryPreviewCard: document.querySelector("#diaryPreviewCard"),
+  diaryEditorImage: document.querySelector("#diaryEditorImage"),
+  diaryPreviewTitle: document.querySelector("#diaryPreviewTitle"),
+  diaryPreviewText: document.querySelector("#diaryPreviewText"),
+  diaryText: document.querySelector("#diaryText"),
+  diaryVoiceBtn: document.querySelector("#diaryVoiceBtn"),
+  diaryCancelBtn: document.querySelector("#diaryCancelBtn"),
+  diaryPreviewBtn: document.querySelector("#diaryPreviewBtn"),
+  diarySaveBtn: document.querySelector("#diarySaveBtn"),
   todayList: document.querySelector("#todayList"),
   toggleOnlineBtn: document.querySelector("#toggleOnlineBtn"),
   searchInput: document.querySelector("#searchInput"),
@@ -87,6 +115,7 @@ const els = {
   audienceNextPageBtn: document.querySelector("#audienceNextPageBtn"),
   audiencePageIndicator: document.querySelector("#audiencePageIndicator"),
   chatForm: document.querySelector("#chatForm"),
+  chatMicBtn: document.querySelector("#chatMicBtn"),
   chatInput: document.querySelector("#chatInput"),
   chatLog: document.querySelector("#chatLog"),
   inviteBtn: document.querySelector("#inviteBtn"),
@@ -104,6 +133,9 @@ const els = {
 
 let mediaRecorder = null;
 let audioChunks = [];
+let chatRecorder = null;
+let chatAudioChunks = [];
+let chatAudioDraft = null;
 
 function loadState() {
   const saved = localStorage.getItem(storageKey);
@@ -114,9 +146,62 @@ function loadState() {
     state.onboarded = Boolean(parsed.onboarded);
     state.stories = parsed.stories || [];
     state.online = Boolean(parsed.online);
+    state.unlockedDiaryIds = parsed.unlockedDiaryIds || [];
+    state.interestedStoryId = parsed.interestedStoryId || null;
   } catch {
     localStorage.removeItem(storageKey);
   }
+}
+
+function makeSilentWavDataUrl(seconds = 2) {
+  const sampleRate = 8000;
+  const channels = 1;
+  const bitsPerSample = 16;
+  const sampleCount = sampleRate * seconds;
+  const dataSize = sampleCount * channels * (bitsPerSample / 8);
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+  const writeString = (offset, value) => {
+    for (let i = 0; i < value.length; i += 1) view.setUint8(offset + i, value.charCodeAt(i));
+  };
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * channels * (bitsPerSample / 8), true);
+  view.setUint16(32, channels * (bitsPerSample / 8), true);
+  view.setUint16(34, bitsPerSample, true);
+  writeString(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  let binary = "";
+  new Uint8Array(buffer).forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return `data:audio/wav;base64,${btoa(binary)}`;
+}
+
+function ensureDefaultStories() {
+  let changed = false;
+  defaultStories.forEach((defaultStory) => {
+    const story = {
+      ...defaultStory,
+      audio: makeSilentWavDataUrl(2),
+    };
+    const existing = state.stories.find((item) => item.id === story.id);
+    if (existing) {
+      Object.assign(existing, story);
+    } else {
+      state.stories.unshift(story);
+    }
+    changed = true;
+  });
+  if (changed) saveState();
 }
 
 function saveState() {
@@ -127,6 +212,8 @@ function saveState() {
       onboarded: state.onboarded,
       stories: state.stories,
       online: state.online,
+      unlockedDiaryIds: state.unlockedDiaryIds,
+      interestedStoryId: state.interestedStoryId,
     })
   );
 }
@@ -135,6 +222,7 @@ function showView(id) {
   document.body.classList.toggle("classroom-mode", id === "classroom");
   document.body.classList.toggle("audience-mode", id === "audience");
   document.body.classList.toggle("create-mode", id === "create");
+  document.body.classList.toggle("diary-mode", id === "diary");
   els.views.forEach((view) => view.classList.toggle("active", view.id === id));
   els.navButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.view === id);
@@ -234,10 +322,12 @@ function showOnboarding() {
   document.body.classList.remove("classroom-mode");
   document.body.classList.remove("audience-mode");
   document.body.classList.remove("create-mode");
+  document.body.classList.remove("diary-mode");
   els.onboarding.classList.remove("is-hidden");
   els.appShell.forEach((node) => node.classList.add("is-hidden"));
   els.reLoginBtn.classList.add("is-hidden");
   els.audienceToggleBtn.classList.add("is-hidden");
+  els.loginName.value = "";
   showLoginStep(0);
 }
 
@@ -245,6 +335,7 @@ function showApp() {
   document.body.classList.remove("classroom-mode");
   document.body.classList.remove("audience-mode");
   document.body.classList.remove("create-mode");
+  document.body.classList.remove("diary-mode");
   els.onboarding.classList.add("is-hidden");
   els.appShell.forEach((node) => node.classList.remove("is-hidden"));
   els.reLoginBtn.classList.remove("is-hidden");
@@ -380,6 +471,7 @@ async function pasteImagesToScrapbook(files) {
         summary: "先把照片貼進相冊，之後可以補上一兩句故事或錄音。",
         image: await dataUrlFromFile(file),
         audio: null,
+        diary: "",
         keywords: makeKeywords(title),
         today: false,
         createdAt: new Date().toISOString(),
@@ -418,6 +510,54 @@ function makeKeywords(text) {
   return [...new Set(base.length ? base : ["生命故事", "照片", "聊天"])];
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getUnlockRecord(storyId) {
+  return state.unlockedDiaryIds.find((record) =>
+    typeof record === "string" ? record === storyId : record?.storyId === storyId
+  );
+}
+
+function isDiaryUnlocked(storyId) {
+  return Boolean(getUnlockRecord(storyId));
+}
+
+function formatUnlockDate(value) {
+  if (!value) return "先前";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "先前";
+  return new Intl.DateTimeFormat("zh-TW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getUnlockLabel(storyId) {
+  const record = getUnlockRecord(storyId);
+  const unlockedAt = typeof record === "string" ? null : record?.unlockedAt;
+  const curatorName = typeof record === "string" ? state.profile.name : record?.curatorName;
+  return `已解鎖！您於${formatUnlockDate(unlockedAt)}和策展人${curatorName || "說故事者"}聊過它的故事。`;
+}
+
+function unlockDiary(storyId) {
+  if (!storyId || isDiaryUnlocked(storyId)) return;
+  state.unlockedDiaryIds.push({
+    storyId,
+    unlockedAt: new Date().toISOString(),
+    curatorName: state.profile.name || "說故事者",
+  });
+}
+
 function addStory(event) {
   event.preventDefault();
   if (!state.selectedImage) {
@@ -432,6 +572,7 @@ function addStory(event) {
     summary,
     image: state.selectedImage.src,
     audio: state.audioDraft,
+    diary: "",
     keywords: makeKeywords(`${title} ${summary}`),
     today: true,
     createdAt: new Date().toISOString(),
@@ -549,7 +690,9 @@ function renderStoryCard(story, index, mode = "gallery") {
   node.querySelector(".story-image").alt = story.title;
   node.querySelector("h3").textContent = story.title;
   node.querySelector(".summary").textContent = story.summary;
-  node.querySelector(".tag-pill").textContent = story.today ? "今天想聊" : "收藏";
+  const cardTag = node.querySelector(".tag-pill");
+  cardTag.textContent = story.today ? "今天想聊" : "收藏";
+  cardTag.classList.toggle("today-pill", story.today);
   const audio = node.querySelector("audio");
   if (story.audio) {
     audio.src = story.audio;
@@ -607,11 +750,32 @@ function makeScrapbookPage(story, index) {
   const page = document.createElement("article");
   page.className = "scrapbook-page";
   page.innerHTML = `
-    <div class="scrapbook-photo-wrap">
-      <img src="${story.image}" alt="${story.title}" />
-      <div class="scrapbook-caption">
-        <h3>${story.title}</h3>
-        <span class="tag-pill">${story.today ? "今天想聊" : "收藏"}</span>
+    <div class="scrapbook-photo-card">
+      <div class="photo-card-inner">
+        <div class="photo-card-face photo-card-front">
+          <div class="scrapbook-photo-wrap">
+            <img src="${story.image}" alt="${story.title}" />
+            <div class="scrapbook-caption">
+              <h3>${story.title}</h3>
+              <div class="caption-actions">
+                <span class="tag-pill ${story.today ? "today-pill" : ""}">${story.today ? "今天想聊" : "收藏"}</span>
+                <button class="ghost-btn small diary-btn" type="button">${story.diary ? "閱讀日記" : "新增日記"}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="photo-card-face photo-card-back">
+          <div class="photo-back">
+            <div class="scrapbook-caption diary-back-caption">
+              <h3>${escapeHtml(story.title)}</h3>
+              <div class="caption-actions">
+                <button class="tag-pill diary-back-edit" data-diary-action="edit" type="button"><span class="diary-edit-icon" aria-hidden="true">✎</span>編輯日記</button>
+                <button class="ghost-btn small" data-diary-action="front" type="button">欣賞照片</button>
+              </div>
+            </div>
+            <div class="diary-back-text">${escapeHtml(story.diary || "這張照片還沒有日記。")}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="paper-note">
@@ -628,6 +792,15 @@ function makeScrapbookPage(story, index) {
       </div>
     </div>
   `;
+  page.querySelector(".diary-btn").addEventListener("click", () => {
+    if (story.diary) {
+      flipToDiary(page, story, false);
+    } else {
+      openDiaryEditor(story.id);
+    }
+  });
+  page.querySelector('[data-diary-action="edit"]').addEventListener("click", () => openDiaryEditor(story.id));
+  page.querySelector('[data-diary-action="front"]').addEventListener("click", () => unflipDiary(page));
 
   const keywords = page.querySelector(".keywords");
   story.keywords.forEach((keyword) => {
@@ -652,15 +825,123 @@ function makeScrapbookPage(story, index) {
   return page;
 }
 
+function flipToDiary(page, story, audienceReadonly) {
+  const card = page.querySelector(".scrapbook-photo-card");
+  if (!card) return;
+  card.classList.remove("flipping-to-front");
+  card.classList.add("flipping-to-back", "is-flipped");
+  window.setTimeout(() => card.classList.remove("flipping-to-back"), 700);
+}
+
+function unflipDiary(page) {
+  const card = page.querySelector(".scrapbook-photo-card");
+  if (!card) return;
+  card.classList.remove("flipping-to-back");
+  card.classList.add("flipping-to-front");
+  card.classList.remove("is-flipped");
+  window.setTimeout(() => card.classList.remove("flipping-to-front"), 700);
+}
+
+function flipDiaryPreview() {
+  const card = els.diaryPreviewCard;
+  if (!card) return;
+  card.classList.remove("flipping-to-front");
+  card.classList.add("flipping-to-back", "is-flipped");
+  els.diaryPreviewBtn.textContent = "看照片";
+  window.setTimeout(() => card.classList.remove("flipping-to-back"), 700);
+}
+
+function unflipDiaryPreview() {
+  const card = els.diaryPreviewCard;
+  if (!card) return;
+  card.classList.remove("flipping-to-back");
+  card.classList.add("flipping-to-front");
+  card.classList.remove("is-flipped");
+  els.diaryPreviewBtn.textContent = "預覽";
+  window.setTimeout(() => card.classList.remove("flipping-to-front"), 700);
+}
+
+function openDiaryEditor(storyId) {
+  const story = state.stories.find((item) => item.id === storyId);
+  if (!story) return;
+  state.editingDiaryId = storyId;
+  els.diaryEditorTitle.textContent = story.diary ? "編輯日記" : "新增日記";
+  els.diaryEditorImage.src = story.image;
+  els.diaryEditorImage.alt = story.title;
+  els.diaryPreviewTitle.textContent = story.title;
+  els.diaryPreviewText.textContent = story.diary || "日記內容會顯示在這裡。";
+  els.diaryText.value = story.diary || "";
+  els.diaryPreviewBtn.textContent = "預覽";
+  els.diaryPreviewCard.classList.remove("is-flipped", "flipping-to-back", "flipping-to-front");
+  showView("diary");
+}
+
+function saveDiary() {
+  const story = state.stories.find((item) => item.id === state.editingDiaryId);
+  if (!story) return;
+  story.diary = els.diaryText.value.trim();
+  saveState();
+  renderAll();
+  showView("gallery");
+}
+
+function previewDiary() {
+  if (els.diaryPreviewCard.classList.contains("is-flipped")) {
+    unflipDiaryPreview();
+    return;
+  }
+  const story = state.stories.find((item) => item.id === state.editingDiaryId);
+  els.diaryPreviewTitle.textContent = story?.title || "照片日記";
+  els.diaryPreviewText.textContent = els.diaryText.value.trim() || "日記內容會顯示在這裡。";
+  flipDiaryPreview();
+}
+
+function startDiaryDictation() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) {
+    alert("這個瀏覽器目前不支援語音輸入。可以先用鍵盤輸入日記。");
+    return;
+  }
+  const recognition = new Recognition();
+  recognition.lang = "zh-TW";
+  recognition.interimResults = false;
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    els.diaryText.value = `${els.diaryText.value}${els.diaryText.value ? "\n" : ""}${text}`;
+  };
+  recognition.start();
+}
+
 function makeReadonlyScrapbookPage(story) {
   const page = document.createElement("article");
   page.className = "scrapbook-page readonly-page";
   page.innerHTML = `
-    <div class="scrapbook-photo-wrap">
-      <img src="${story.image}" alt="${story.title}" />
-      <div class="scrapbook-caption">
-        <h3>${story.title}</h3>
-        <button class="tag-pill interest-btn" type="button">有興趣</button>
+    <div class="scrapbook-photo-card">
+      <div class="photo-card-inner">
+        <div class="photo-card-face photo-card-front">
+          <div class="scrapbook-photo-wrap">
+            <img src="${story.image}" alt="${story.title}" />
+            <div class="scrapbook-caption">
+              <h3>${story.title}</h3>
+              <div class="caption-actions">
+                <button class="tag-pill interest-btn" type="button">有興趣</button>
+                <button class="ghost-btn small audience-diary-btn" type="button">閱讀日記</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="photo-card-face photo-card-back">
+          <div class="photo-back">
+            <div class="scrapbook-caption diary-back-caption">
+              <h3>${escapeHtml(story.title)}</h3>
+              <div class="caption-actions">
+                <span class="tag-pill unlock-pill">${escapeHtml(getUnlockLabel(story.id))}</span>
+                <button class="ghost-btn small" data-diary-action="front" type="button">欣賞照片</button>
+              </div>
+            </div>
+            <div class="diary-back-text">${escapeHtml(story.diary || "這張照片還沒有日記。")}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="paper-note">
@@ -669,7 +950,23 @@ function makeReadonlyScrapbookPage(story) {
     </div>
     <div class="scrapbook-audio"></div>
   `;
-  page.querySelector(".interest-btn").addEventListener("click", () => showView("messages"));
+  page.querySelector(".interest-btn").addEventListener("click", () => {
+    state.interestedStoryId = story.id;
+    saveState();
+    showView("messages");
+  });
+  page.querySelector(".audience-diary-btn").addEventListener("click", () => {
+    if (!story.diary) {
+      alert("這張照片目前還沒有日記內容。");
+      return;
+    }
+    if (!isDiaryUnlocked(story.id)) {
+      alert("對這張照片有興趣嗎？和策展人聊過它的故事後即可解鎖照片的日記內容！");
+      return;
+    }
+    flipToDiary(page, story, true);
+  });
+  page.querySelector('[data-diary-action="front"]').addEventListener("click", () => unflipDiary(page));
   const keywords = page.querySelector(".keywords");
   story.keywords.forEach((keyword) => {
     const tag = document.createElement("span");
@@ -830,6 +1127,17 @@ function addChatBubble(text, speaker) {
   els.chatLog.scrollTop = els.chatLog.scrollHeight;
 }
 
+function addChatAudioBubble(audioSrc, speaker) {
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${speaker}`;
+  const audio = document.createElement("audio");
+  audio.controls = true;
+  audio.src = audioSrc;
+  bubble.append(audio);
+  els.chatLog.append(bubble);
+  els.chatLog.scrollTop = els.chatLog.scrollHeight;
+}
+
 function addClassroomLinkBubble() {
   const bubble = document.createElement("div");
   bubble.className = "bubble link-bubble";
@@ -837,7 +1145,13 @@ function addClassroomLinkBubble() {
   button.type = "button";
   button.className = "classroom-link";
   button.textContent = "連結";
-  button.addEventListener("click", () => showView("classroom"));
+  button.addEventListener("click", () => {
+    if (state.interestedStoryId && !isDiaryUnlocked(state.interestedStoryId)) {
+      unlockDiary(state.interestedStoryId);
+      saveState();
+    }
+    showView("classroom");
+  });
   bubble.append(button);
   els.chatLog.append(bubble);
   els.chatLog.scrollTop = els.chatLog.scrollHeight;
@@ -846,9 +1160,45 @@ function addClassroomLinkBubble() {
 function sendChat(event) {
   event.preventDefault();
   const text = els.chatInput.value.trim();
-  if (!text) return;
-  addChatBubble(text, "elder");
+  if (!text && !chatAudioDraft) return;
+  if (chatAudioDraft) {
+    addChatAudioBubble(chatAudioDraft, "elder");
+    chatAudioDraft = null;
+    els.chatMicBtn.textContent = "🎙";
+  }
+  if (text) addChatBubble(text, "elder");
   els.chatInput.value = "";
+}
+
+async function toggleChatRecording() {
+  if (chatRecorder?.state === "recording") {
+    chatRecorder.stop();
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert("這個瀏覽器不支援錄音。請確認使用 Chrome 並允許麥克風權限。");
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    chatAudioChunks = [];
+    chatRecorder = new MediaRecorder(stream);
+    chatRecorder.ondataavailable = (event) => chatAudioChunks.push(event.data);
+    chatRecorder.onstop = () => {
+      const blob = new Blob(chatAudioChunks, { type: chatRecorder.mimeType || "audio/webm" });
+      const reader = new FileReader();
+      reader.onload = () => {
+        chatAudioDraft = reader.result;
+        els.chatMicBtn.textContent = "已錄";
+      };
+      reader.readAsDataURL(blob);
+      stream.getTracks().forEach((track) => track.stop());
+    };
+    chatRecorder.start();
+    els.chatMicBtn.textContent = "停止";
+  } catch (error) {
+    alert("無法取得麥克風權限。");
+  }
 }
 
 function sendInvite() {
@@ -1002,6 +1352,10 @@ function bindEvents() {
       showCreateStep(targetStep);
     });
   });
+  els.diarySaveBtn.addEventListener("click", saveDiary);
+  els.diaryPreviewBtn.addEventListener("click", previewDiary);
+  els.diaryCancelBtn.addEventListener("click", () => showView("gallery"));
+  els.diaryVoiceBtn.addEventListener("click", startDiaryDictation);
   els.recordBtn.addEventListener("click", toggleRecording);
   els.stopRecordBtn.addEventListener("click", stopRecording);
   els.clearAudioBtn.addEventListener("click", clearAudioDraft);
@@ -1031,6 +1385,7 @@ function bindEvents() {
     renderAudienceBook();
   });
   els.chatForm.addEventListener("submit", sendChat);
+  els.chatMicBtn.addEventListener("click", toggleChatRecording);
   els.inviteBtn.addEventListener("click", sendInvite);
   els.endClassBtn.addEventListener("click", () => showView("messages"));
   els.startTimerBtn.addEventListener("click", startTimer);
@@ -1039,6 +1394,7 @@ function bindEvents() {
 
 function init() {
   loadState();
+  ensureDefaultStories();
   setupBirthdayFields();
   els.loginName.value = state.profile.name || "";
   els.loginGender.value = state.profile.gender || "";
