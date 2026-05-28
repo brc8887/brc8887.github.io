@@ -44,6 +44,10 @@ body {
   min-height: 100vh;
 }
 
+.diary-mode .step-nav {
+  display: none;
+}
+
 .onboarding {
   min-height: 100vh;
   display: grid;
@@ -248,6 +252,7 @@ h3 {
 .tag-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
   padding: 8px 14px;
   border: 2px solid var(--line);
@@ -257,6 +262,12 @@ h3 {
 }
 
 .status-chip.online {
+  color: #0d5135;
+  background: var(--soft-green);
+  border-color: #8fc5a8;
+}
+
+.tag-pill.today-pill {
   color: #0d5135;
   background: var(--soft-green);
   border-color: #8fc5a8;
@@ -578,8 +589,8 @@ audio {
 .scrapbook-page {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 14px;
+  grid-template-rows: auto auto auto;
+  gap: 28px;
   min-height: 680px;
   padding: clamp(18px, 3vw, 34px);
   background:
@@ -664,6 +675,69 @@ audio {
   font-weight: 800;
 }
 
+.scrapbook-photo-card {
+  perspective: 1200px;
+  min-height: 500px;
+}
+
+.photo-card-inner {
+  position: relative;
+  min-height: 500px;
+  transition: transform 0.7s ease;
+  transform-style: preserve-3d;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-inner {
+  transform: rotateY(180deg);
+}
+
+.photo-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.photo-card-back {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: rotateY(180deg);
+  z-index: 2;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-front {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.photo-card-front .scrapbook-photo-wrap > img,
+.photo-card-front .scrapbook-caption {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.25s ease 0.25s,
+    visibility 0s linear 0s;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-front .scrapbook-photo-wrap > img,
+.scrapbook-photo-card.is-flipped .photo-card-front .scrapbook-caption {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease 0.25s,
+    visibility 0s linear 0.5s;
+}
+
+.scrapbook-photo-card.flipping-to-back.is-flipped .photo-card-front .scrapbook-photo-wrap > img,
+.scrapbook-photo-card.flipping-to-back.is-flipped .photo-card-front .scrapbook-caption {
+  transition:
+    opacity 0s linear 0.22s,
+    visibility 0s linear 0.22s;
+}
+
 .scrapbook-photo-wrap {
   position: relative;
   align-self: start;
@@ -686,6 +760,73 @@ audio {
   border-radius: 3px;
 }
 
+.photo-back {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  padding: 30px 54px 42px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  overflow: auto;
+}
+
+.diary-back-caption {
+  margin-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.diary-back-caption .caption-actions {
+  position: absolute;
+  right: 24px;
+  bottom: 4px;
+  justify-content: flex-end;
+}
+
+.diary-back-edit {
+  background: #2563b8;
+  border-color: #2563b8;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unlock-pill {
+  max-width: 560px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1;
+}
+
+.diary-edit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.diary-back-text {
+  margin-top: 22px;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+.diary-read-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .scrapbook-caption {
   display: flex;
   align-items: center;
@@ -694,19 +835,46 @@ audio {
   margin-top: 12px;
 }
 
+.caption-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.caption-actions .tag-pill,
+.caption-actions .ghost-btn.small,
+.caption-actions .secondary-btn.small {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .scrapbook-caption h3 {
   margin: 0;
   font-size: clamp(1.25rem, 2vw, 1.65rem);
 }
 
 .paper-note {
+  display: block;
   align-self: start;
   padding: 18px;
+  margin-top: 44px;
   background: #fff7bd;
   border: 1px solid #e2ce65;
   border-radius: 6px;
   box-shadow: 0 8px 18px rgba(70, 54, 25, 0.14);
   transform: rotate(0.6deg);
+}
+
+.paper-note .keywords {
+  margin-top: 14px;
 }
 
 .paper-note p {
@@ -715,11 +883,13 @@ audio {
 
 .paper-note h3 {
   margin-bottom: 8px;
+  line-height: 1.25;
 }
 
 .scrapbook-audio {
   padding: 12px;
-  margin-bottom: 12px;
+  margin-top: -10px;
+  margin-bottom: 18px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px dashed #b9a56b;
   border-radius: 8px;
@@ -876,8 +1046,53 @@ audio {
 
 .chat-form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 12px;
+}
+
+.mic-btn {
+  min-width: 56px;
+  padding-inline: 12px;
+}
+
+.diary-editor {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: clamp(20px, 4vw, 44px);
+  align-items: start;
+}
+
+.diary-photo-panel {
+  min-height: 500px;
+}
+
+.diary-photo-panel .scrapbook-photo-wrap,
+.diary-photo-panel .photo-back {
+  height: 100%;
+  min-height: 500px;
+}
+
+.diary-photo-panel img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.diary-editor-back {
+  padding: 54px 58px;
+}
+
+.diary-editor-back h3 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+}
+
+.diary-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .classroom {
@@ -981,7 +1196,11 @@ audio {
   }
 
   .chat-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
+  }
+
+  .chat-form .secondary-btn {
+    grid-column: 1 / -1;
   }
 
   .scrapbook-spread {
