@@ -1,411 +1,1218 @@
-<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>故事相冊 Prototype</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <section class="onboarding" id="onboarding">
-      <div class="login-card">
-        <p class="section-label">第一次使用</p>
-        <h1>建立說故事者資料</h1>
-        <nav class="breadcrumb" aria-label="登錄進度">
-          <button class="crumb active" data-login-step="0">1 名稱</button>
-          <button class="crumb" data-login-step="1">2 性別</button>
-          <button class="crumb" data-login-step="2">3 生日</button>
-        </nav>
+:root {
+  --bg: #f7f7f2;
+  --surface: #ffffff;
+  --ink: #171717;
+  --muted: #5e6470;
+  --line: #d8d6cc;
+  --green: #1f7a54;
+  --blue: #2456a6;
+  --red: #b7362d;
+  --gold: #b7791f;
+  --soft-green: #e7f3ec;
+  --soft-blue: #e9f0fb;
+  --shadow: 0 14px 34px rgba(20, 30, 40, 0.11);
+}
 
-        <form id="loginForm">
-          <section class="login-step active" data-step="0">
-            <label>
-              您希望大家怎麼稱呼您？
-              <input id="loginName" type="text" autocomplete="name" />
-            </label>
-          </section>
-          <section class="login-step" data-step="1">
-            <label>
-              您的性別是？
-              <select id="loginGender">
-                <option value="">請選擇</option>
-                <option>女性</option>
-                <option>男性</option>
-                <option>其他</option>
-                <option>不想回答</option>
-              </select>
-            </label>
-          </section>
-          <section class="login-step" data-step="2">
-            <p class="birthday-label">您的生日是？</p>
-            <div class="birthday-fields">
-              <label>
-                年
-                <select id="birthYear"></select>
-              </label>
-              <label>
-                月
-                <select id="birthMonth"></select>
-              </label>
-              <label>
-                日
-                <select id="birthDay"></select>
-              </label>
-            </div>
-            <p class="birthday-hint" id="birthdayHint">請依序選擇出生年、月、日。</p>
-          </section>
+* {
+  box-sizing: border-box;
+}
 
-          <div class="login-actions">
-            <button class="ghost-btn" id="loginBackBtn" type="button">上一步</button>
-            <button class="primary-btn" id="loginNextBtn" type="submit">下一步</button>
-          </div>
-        </form>
-      </div>
-    </section>
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+  font-size: 20px;
+  line-height: 1.5;
+}
 
-    <header class="app-header app-shell">
-      <div>
-        <p class="eyebrow">青銀交流｜照片作為聊天主題</p>
-        <h1>故事相冊</h1>
-      </div>
-      <div class="status-chip" id="onlineStatus">目前離線</div>
-    </header>
+.is-hidden,
+.classroom-mode .app-header,
+.classroom-mode .step-nav,
+.classroom-mode .test-reset-btn,
+.classroom-mode .test-audience-btn,
+.create-mode .step-nav,
+.audience-mode .app-header,
+.audience-mode .step-nav,
+.audience-mode .test-reset-btn,
+.app-shell.is-hidden,
+.onboarding.is-hidden {
+  display: none;
+}
 
-    <nav class="step-nav app-shell" aria-label="主要流程">
-      <button class="nav-btn active" data-view="gallery">1 我的相冊</button>
-      <button class="nav-btn" data-view="live">2 接課</button>
-      <button class="nav-btn" data-view="messages">3 私訊</button>
-    </nav>
+.classroom-mode main {
+  min-height: 100vh;
+}
 
-    <main class="app-shell">
-      <section class="view" id="profile">
-        <div class="page-band two-col">
-          <div>
-            <p class="section-label">長輩登錄</p>
-            <h2>用很少的資料開始</h2>
-            <p class="lead">這個 prototype 把「申請成為老師」改成「建立說故事者資料」。重點不是履歷，而是今天想分享什麼生命經驗。</p>
-          </div>
-          <form class="panel" id="profileForm">
-            <label>
-              顯示名稱
-              <input id="elderName" type="text" value="陳阿姨" />
-            </label>
-            <label>
-              我比較習慣使用
-              <select id="languageMode">
-                <option>國語為主，可以穿插台語</option>
-                <option>台語為主</option>
-                <option>國語為主</option>
-                <option>國台語自然切換</option>
-              </select>
-            </label>
-            <label>
-              我想聊的主題
-              <textarea id="profileTopics" rows="4">老照片、家庭料理、以前的台北、工作故事、人生選擇</textarea>
-            </label>
-            <button class="primary-btn" type="submit">儲存資料</button>
-          </form>
-        </div>
-      </section>
+.diary-mode .step-nav {
+  display: none;
+}
 
-      <section class="view" id="create">
-        <div class="page-band">
-          <p class="section-label">新增故事</p>
-          <h2>把一張照片貼進生命故事相冊</h2>
-          <nav class="breadcrumb create-breadcrumb" aria-label="新增故事進度">
-            <button class="crumb active" data-create-step="0" type="button">1 上傳照片</button>
-            <button class="crumb" data-create-step="1" type="button">2 錄下故事開場</button>
-            <button class="crumb" data-create-step="2" type="button">3 預覽</button>
-          </nav>
+.onboarding {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(22px, 5vw, 64px);
+  background:
+    linear-gradient(90deg, rgba(107, 85, 66, 0.12), transparent 24%, transparent 76%, rgba(107, 85, 66, 0.12)),
+    var(--bg);
+}
 
-          <form class="story-form" id="storyForm">
-            <section class="create-step active" data-step="0">
-              <div class="upload-box">
-                <input id="imageInput" type="file" accept="image/*" multiple />
-                <label for="imageInput" class="upload-label">
-                  <span class="big-symbol">+</span>
-                  <strong>選擇照片</strong>
-                  <small>先選一張想貼進相冊的照片</small>
-                </label>
-                <div class="preview-strip" id="previewStrip"></div>
-              </div>
-            </section>
+.login-card {
+  width: min(100%, 760px);
+  padding: clamp(24px, 5vw, 48px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
 
-            <section class="create-step" data-step="1">
-              <div class="panel story-form-panel">
-                <label>
-                  這張照片的標題
-                  <input id="storyTitle" type="text" placeholder="例如：杜鵑花" />
-                </label>
-                <label>
-                  一兩句故事主軸
-                  <textarea id="storySummary" rows="5" placeholder="例如：這張照片是我以前在家門口種的杜鵑花，每年春天都會開。"></textarea>
-                </label>
-                <div class="recorder">
-                  <div>
-                    <strong>錄音</strong>
-                    <p id="recordHint">先按「開始錄故事」，講完後按「停止並存下來」。</p>
-                    <p class="record-status" id="recordStatus">尚未錄音</p>
-                  </div>
-                  <div class="record-actions">
-                    <button class="primary-btn" id="recordBtn" type="button">開始錄故事</button>
-                    <button class="danger-btn" id="stopRecordBtn" type="button" disabled>停止並存下來</button>
-                    <button class="ghost-btn" id="clearAudioBtn" type="button">清除錄音</button>
-                  </div>
-                  <audio id="audioPlayback" controls></audio>
-                </div>
-              </div>
-            </section>
+.breadcrumb {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0 30px;
+}
 
-            <section class="create-step" data-step="2">
-              <div class="scrapbook-page preview-page">
-                <div class="scrapbook-photo-wrap">
-                  <img id="storyPreviewImage" alt="故事照片預覽" />
-                  <div class="scrapbook-caption">
-                    <h3 id="storyPreviewTitle">照片標題</h3>
-                    <span class="tag-pill">今天想聊</span>
-                  </div>
-                </div>
-                <div class="paper-note">
-                  <h3 id="storyPreviewNoteTitle">照片標題</h3>
-                  <p id="storyPreviewSummary">故事主軸會顯示在這裡。</p>
-                  <div class="keywords" id="storyPreviewKeywords"></div>
-                </div>
-                <div class="scrapbook-audio" id="storyPreviewAudio"></div>
-              </div>
-            </section>
+.crumb {
+  min-height: 58px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-weight: 900;
+}
 
-            <div class="create-actions">
-              <button class="ghost-btn" id="cancelStoryBtn" type="button">取消</button>
-              <button class="ghost-btn" id="createBackBtn" type="button">上一步</button>
-              <button class="primary-btn" id="createNextBtn" type="button">下一步</button>
-              <button class="primary-btn is-hidden" id="saveStoryBtn" type="submit">貼到相冊</button>
-            </div>
-          </form>
-        </div>
-      </section>
+.crumb.active {
+  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
 
-      <section class="view old-create-hidden" id="old-create" aria-hidden="true">
-        <div class="page-band">
-          <p class="section-label">建立故事卡</p>
-          <h2>上傳一張照片，再錄一段故事開場</h2>
-          <div class="create-grid">
-            <div class="upload-box">
-              <input id="imageInput" type="file" accept="image/*" multiple />
-              <label for="imageInput" class="upload-label">
-                <span class="big-symbol">+</span>
-                <strong>選擇照片</strong>
-                <small>可以從手機翻拍的舊照片開始</small>
-              </label>
-              <div class="preview-strip" id="previewStrip"></div>
-            </div>
+.crumb.done {
+  color: #0d5135;
+  background: var(--soft-green);
+  border-color: #8fc5a8;
+}
 
-            <form class="panel story-form" id="storyForm">
-              <label>
-                這張照片的標題
-                <input id="storyTitle" type="text" placeholder="例如：第一次去日本旅行" />
-              </label>
-              <label>
-                一兩句故事主軸
-                <textarea id="storySummary" rows="5" placeholder="例如：這張是我年輕時第一次自己出國，那時候搭飛機和現在很不一樣。"></textarea>
-              </label>
+.login-step {
+  display: none;
+}
 
-              <div class="recorder">
-                <div>
-                  <strong>錄音</strong>
-                  <p id="recordHint">先按「開始錄故事」，講完後按「停止並存下來」。</p>
-                  <p class="record-status" id="recordStatus">尚未錄音</p>
-                </div>
-                <div class="record-actions">
-                  <button class="primary-btn" id="recordBtn" type="button">開始錄故事</button>
-                  <button class="danger-btn" id="stopRecordBtn" type="button" disabled>停止並存下來</button>
-                  <button class="ghost-btn" id="clearAudioBtn" type="button">清除</button>
-                </div>
-                <audio id="audioPlayback" controls></audio>
-              </div>
+.login-step.active {
+  display: block;
+}
 
-              <button class="primary-btn" type="submit">加入我的相冊</button>
-            </form>
-          </div>
-        </div>
-      </section>
+.create-step {
+  display: none;
+}
 
-      <section class="view active" id="gallery">
-        <div class="page-band">
-          <div class="section-head">
-            <div>
-              <p class="section-label">個人主頁</p>
-              <h2>我的生命故事相冊</h2>
-            </div>
-            <div class="scrapbook-actions">
-              <button class="ghost-btn" id="prevPageBtn">上一頁</button>
-              <span id="pageIndicator" class="page-indicator">第 1 頁</span>
-              <button class="ghost-btn" id="nextPageBtn">下一頁</button>
-            </div>
-          </div>
-          <div class="scrapbook-shell" id="scrapbookShell">
-            <input id="galleryImageInput" class="hidden-file" type="file" accept="image/*" multiple />
-            <div class="book-spine" aria-hidden="true"></div>
-            <div class="scrapbook-spread" id="scrapbookSpread"></div>
-          </div>
-          <p class="empty-state" id="emptyGallery">這本書還是空的。點空白頁，或把照片拖到書頁上，就可以先貼進相冊。</p>
-        </div>
-      </section>
+.create-step.active {
+  display: block;
+}
 
-      <section class="view" id="diary">
-        <div class="page-band">
-          <p class="section-label">照片背面的日記</p>
-          <h2 id="diaryEditorTitle">新增日記</h2>
-          <div class="diary-editor">
-            <div class="diary-photo-panel scrapbook-photo-card" id="diaryPreviewCard">
-              <div class="photo-card-inner">
-                <div class="photo-card-face photo-card-front">
-                  <div class="scrapbook-photo-wrap">
-                    <img id="diaryEditorImage" alt="日記照片" />
-                  </div>
-                </div>
-                <div class="photo-card-face photo-card-back">
-                  <div class="photo-back diary-editor-back">
-                    <h3 id="diaryPreviewTitle"></h3>
-                    <div class="diary-back-text" id="diaryPreviewText"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="panel diary-writing-panel">
-              <label>
-                寫下這張照片背後想留下的日記
-                <textarea id="diaryText" rows="10" placeholder="可以寫今天想到的回憶、補充故事、或想留給之後再看的話。"></textarea>
-              </label>
-              <div class="diary-actions">
-                <button class="ghost-btn" id="diaryVoiceBtn" type="button">語音輸入</button>
-                <button class="ghost-btn" id="diaryCancelBtn" type="button">取消</button>
-                <button class="secondary-btn" id="diaryPreviewBtn" type="button">預覽</button>
-                <button class="primary-btn" id="diarySaveBtn" type="button">儲存日記</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+.create-breadcrumb {
+  max-width: 980px;
+}
 
-      <section class="view" id="live">
-        <div class="page-band two-col">
-          <div>
-            <p class="section-label">即時接課</p>
-            <h2>上線時才接收私訊</h2>
-            <p class="lead">這裡模擬 on-demand 模式：長輩按下上線後，只展示今天想聊的照片，降低排程和訊息壓力。</p>
-            <button class="primary-btn" id="toggleOnlineBtn">打開接課</button>
-          </div>
-          <div class="panel">
-            <h3>今天開放聊天的照片</h3>
-            <div id="todayList" class="compact-list"></div>
-          </div>
-        </div>
-      </section>
+.story-form-panel {
+  max-width: 760px;
+}
 
-      <section class="view audience-view" id="audience">
-        <div class="page-band" id="audienceSearchPanel">
-          <div class="section-head">
-            <div>
-              <p class="section-label">觀眾搜尋結果</p>
-              <h2>觀眾視角</h2>
-            </div>
-            <input id="searchInput" class="search" type="search" placeholder="搜尋：料理、台北、人生..." />
-          </div>
-          <div class="story-grid" id="searchResults"></div>
-        </div>
-        <div class="page-band audience-book-panel is-hidden" id="audienceBookPanel">
-          <div class="section-head">
-            <div>
-              <p class="section-label">觀眾視角</p>
-              <h2>生命故事相冊</h2>
-            </div>
-            <div class="scrapbook-actions">
-              <button class="ghost-btn" id="audienceBackToSearchBtn">回到搜尋</button>
-              <button class="ghost-btn" id="audiencePrevPageBtn">上一頁</button>
-              <span id="audiencePageIndicator" class="page-indicator">第 1 頁</span>
-              <button class="ghost-btn" id="audienceNextPageBtn">下一頁</button>
-            </div>
-          </div>
-          <div class="scrapbook-shell readonly-book">
-            <div class="book-spine" aria-hidden="true"></div>
-            <div class="scrapbook-spread" id="audienceScrapbookSpread"></div>
-          </div>
-        </div>
-      </section>
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
 
-      <section class="view" id="messages">
-        <div class="page-band messages-layout">
-          <aside class="panel visitor-card">
-            <p class="section-label">私訊對象</p>
-            <h2>Alex</h2>
-            <p>中文程度：中級</p>
-            <p>可理解：國語，少量台語詞</p>
-            <p>感興趣：老照片裡的市場、食物、家庭故事</p>
-            <button class="primary-btn" id="inviteBtn">發送 15 分鐘邀請</button>
-          </aside>
-          <section class="chat-panel">
-            <div class="chat-log" id="chatLog">
-              <div class="bubble visitor">您好，我想聽「杜鵑花」這張照片的故事，可以嗎？</div>
-              <div class="bubble elder">可以，我今天上線，先聊 15 分鐘。</div>
-            </div>
-            <form class="chat-form" id="chatForm">
-              <button class="ghost-btn mic-btn" id="chatMicBtn" type="button" aria-label="錄製語音訊息">🎙</button>
-              <input id="chatInput" type="text" placeholder="輸入回覆..." />
-              <button class="secondary-btn" type="submit">送出</button>
-            </form>
-          </section>
-        </div>
-      </section>
+.preview-page {
+  max-width: 620px;
+  margin: 0 auto;
+  border: 1px solid rgba(96, 74, 48, 0.22);
+  box-shadow: var(--shadow);
+}
 
-      <section class="view" id="classroom">
-        <div class="classroom">
-          <section class="photo-stage">
-            <img id="classroomImage" alt="教室照片" />
-            <div class="timer" id="timer">15:00</div>
-            <button class="danger-btn end-class-btn" id="endClassBtn" type="button">結束課程</button>
-          </section>
-          <aside class="tools-panel">
-            <h2>聊天輔助</h2>
-            <button class="secondary-btn" id="startTimerBtn">開始 15 分鐘</button>
-            <button class="ghost-btn" id="clearCanvasBtn">清除畫板</button>
-            <canvas id="drawCanvas" width="520" height="280" aria-label="繪圖板"></canvas>
-            <div class="translate-box">
-              <label>
-                文字聊天室與即時翻譯
-                <textarea id="translateText" rows="4">這張照片是在以前的市場拍的。</textarea>
-              </label>
-              <button class="secondary-btn" id="translateBtn">翻譯成英文</button>
-              <p id="translationOutput">This photo was taken at an old market.</p>
-            </div>
-          </aside>
-        </div>
-      </section>
-    </main>
+.login-step input,
+.login-step select {
+  min-height: 72px;
+  font-size: 1.25rem;
+}
 
-    <template id="storyCardTemplate">
-      <article class="story-card">
-        <img class="story-image" alt="" />
-        <div class="story-body">
-          <div class="card-title-row">
-            <h3></h3>
-            <span class="tag-pill">故事</span>
-          </div>
-          <p class="summary"></p>
-          <div class="keywords"></div>
-          <audio controls></audio>
-          <div class="card-actions">
-            <button class="ghost-btn small" data-action="up">上移</button>
-            <button class="ghost-btn small" data-action="down">下移</button>
-            <button class="secondary-btn small" data-action="today">今天想聊</button>
-            <button class="danger-btn small" data-action="delete">刪除</button>
-          </div>
-        </div>
-      </article>
-    </template>
+.birthday-label {
+  margin-bottom: 10px;
+  font-weight: 900;
+}
 
-    <button class="test-reset-btn" id="reLoginBtn" type="button">測試用：重新登錄</button>
-    <button class="test-audience-btn" id="audienceToggleBtn" type="button">測試用：觀眾視角</button>
-    <script src="app.js"></script>
-  </body>
-</html>
+.birthday-fields {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+}
+
+.birthday-hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.login-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.test-reset-btn,
+.test-audience-btn {
+  position: fixed;
+  bottom: 16px;
+  z-index: 20;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(20, 30, 40, 0.14);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.test-reset-btn {
+  left: 16px;
+  bottom: 68px;
+}
+
+.test-audience-btn {
+  left: 16px;
+}
+
+.audience-mode .test-audience-btn {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px clamp(18px, 4vw, 56px);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow,
+.section-label {
+  margin: 0 0 6px;
+  color: var(--blue);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  line-height: 1.05;
+}
+
+h2 {
+  margin-bottom: 14px;
+  font-size: clamp(1.55rem, 3.2vw, 2.45rem);
+  line-height: 1.15;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: 1.15rem;
+}
+
+.status-chip,
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff8e8;
+  font-weight: 800;
+}
+
+.status-chip.online {
+  color: #0d5135;
+  background: var(--soft-green);
+  border-color: #8fc5a8;
+}
+
+.tag-pill.today-pill {
+  color: #0d5135;
+  background: var(--soft-green);
+  border-color: #8fc5a8;
+}
+
+.step-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+  padding: 12px clamp(12px, 3vw, 42px);
+  overflow-x: auto;
+  background: rgba(247, 247, 242, 0.96);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-btn {
+  min-height: 54px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.nav-btn.active {
+  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+main {
+  min-height: calc(100vh - 170px);
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.old-create-hidden {
+  display: none !important;
+}
+
+.page-band {
+  padding: clamp(24px, 4vw, 56px);
+  border-bottom: 1px solid var(--line);
+}
+
+.two-col,
+.create-grid,
+.messages-layout,
+.classroom {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+  gap: clamp(20px, 4vw, 44px);
+  align-items: start;
+}
+
+.lead {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 1.12rem;
+}
+
+.panel,
+.chat-panel,
+.tools-panel {
+  padding: clamp(18px, 3vw, 30px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-weight: 800;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid #b9b7ad;
+  border-radius: 8px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.primary-btn,
+.secondary-btn,
+.ghost-btn,
+.danger-btn {
+  min-height: 56px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  font-weight: 900;
+}
+
+.primary-btn {
+  color: #fff;
+  background: var(--green);
+}
+
+.primary-btn.danger-state {
+  background: var(--red);
+}
+
+.secondary-btn {
+  color: #fff;
+  background: var(--blue);
+}
+
+.ghost-btn {
+  color: var(--ink);
+  background: #fff;
+  border-color: var(--line);
+}
+
+.danger-btn {
+  color: #fff;
+  background: var(--red);
+}
+
+.small {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.upload-box {
+  min-height: 480px;
+}
+
+#imageInput,
+.hidden-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.upload-label {
+  min-height: 280px;
+  place-items: center;
+  margin: 0;
+  padding: 28px;
+  text-align: center;
+  background: var(--soft-blue);
+  border: 4px dashed #7f9fd8;
+  border-radius: 8px;
+}
+
+.upload-label small {
+  display: block;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.big-symbol {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 50%;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.preview-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.preview-strip button {
+  padding: 0;
+  border: 4px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.preview-strip button.selected {
+  border-color: var(--gold);
+}
+
+.preview-strip img,
+.story-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #ddd;
+}
+
+.recorder {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  background: #fff8e8;
+  border: 1px solid #e2c88d;
+  border-radius: 8px;
+}
+
+.record-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 40px;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.record-status.recording {
+  color: #fff;
+  background: var(--red);
+}
+
+.record-status.ready {
+  color: #0d5135;
+  background: var(--soft-green);
+}
+
+.record-actions,
+.card-actions,
+.section-head,
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+audio {
+  width: 100%;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 20px;
+}
+
+.scrapbook-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-indicator {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf6;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.scrapbook-shell {
+  position: relative;
+  margin-top: 20px;
+  padding: clamp(12px, 2vw, 22px);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.1)),
+    #6b5542;
+  box-shadow: 0 22px 48px rgba(35, 29, 23, 0.24);
+}
+
+.book-spine {
+  position: absolute;
+  inset: 18px auto 18px 50%;
+  width: 22px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(85, 62, 45, 0.7), rgba(255, 255, 255, 0.55), rgba(85, 62, 45, 0.7));
+  z-index: 2;
+}
+
+.scrapbook-spread {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 680px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f4ecd8;
+}
+
+.scrapbook-page {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 28px;
+  min-height: 680px;
+  padding: clamp(18px, 3vw, 34px);
+  background:
+    linear-gradient(90deg, rgba(80, 58, 34, 0.1), transparent 12%),
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #fff9e9;
+  border-right: 1px solid rgba(96, 74, 48, 0.22);
+}
+
+.scrapbook-page:nth-child(2) {
+  background:
+    linear-gradient(270deg, rgba(80, 58, 34, 0.1), transparent 12%),
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #fffaf0;
+  border-right: 0;
+}
+
+.scrapbook-page::before,
+.scrapbook-page::after {
+  content: "";
+  position: absolute;
+  width: 58px;
+  height: 22px;
+  background: rgba(222, 191, 118, 0.66);
+  transform: rotate(-8deg);
+  border: 1px solid rgba(142, 112, 52, 0.22);
+  z-index: 2;
+}
+
+.scrapbook-page::before {
+  top: 18px;
+  left: 28px;
+}
+
+.scrapbook-page::after {
+  right: 28px;
+  bottom: 120px;
+  transform: rotate(7deg);
+}
+
+.scrapbook-page.empty {
+  place-items: center;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 800;
+}
+
+.scrapbook-page.empty.drag-over {
+  outline: 5px solid var(--green);
+  outline-offset: -12px;
+  background:
+    linear-gradient(90deg, rgba(31, 122, 84, 0.14), transparent 18%),
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #f4ffe9;
+}
+
+.paste-photo-button {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+  min-height: 300px;
+  padding: 26px;
+  color: var(--ink);
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
+    repeating-linear-gradient(45deg, rgba(36, 86, 166, 0.08) 0 12px, transparent 12px 24px);
+  border: 4px dashed #b9a56b;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.5);
+  font-weight: 900;
+}
+
+.paste-photo-button .big-symbol {
+  width: 70px;
+  height: 70px;
+  font-size: 2.6rem;
+}
+
+.paste-photo-button small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.scrapbook-photo-card {
+  perspective: 1200px;
+  min-height: 500px;
+}
+
+.photo-card-inner {
+  position: relative;
+  min-height: 500px;
+  transition: transform 0.7s ease;
+  transform-style: preserve-3d;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-inner {
+  transform: rotateY(180deg);
+}
+
+.photo-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.photo-card-back {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: rotateY(180deg);
+  z-index: 2;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-front {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.photo-card-front .scrapbook-photo-wrap > img,
+.photo-card-front .scrapbook-caption {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.25s ease 0.25s,
+    visibility 0s linear 0s;
+}
+
+.scrapbook-photo-card.is-flipped .photo-card-front .scrapbook-photo-wrap > img,
+.scrapbook-photo-card.is-flipped .photo-card-front .scrapbook-caption {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease 0.25s,
+    visibility 0s linear 0.5s;
+}
+
+.scrapbook-photo-card.flipping-to-back.is-flipped .photo-card-front .scrapbook-photo-wrap > img,
+.scrapbook-photo-card.flipping-to-back.is-flipped .photo-card-front .scrapbook-caption {
+  transition:
+    opacity 0s linear 0.22s,
+    visibility 0s linear 0.22s;
+}
+
+.scrapbook-photo-wrap {
+  position: relative;
+  align-self: start;
+  padding: 14px 14px 42px;
+  background: #fff;
+  border: 1px solid #e2dccd;
+  border-radius: 4px;
+  box-shadow: 0 10px 22px rgba(35, 29, 23, 0.18);
+  transform: rotate(-1.5deg);
+}
+
+.scrapbook-page:nth-child(2) .scrapbook-photo-wrap {
+  transform: rotate(1.3deg);
+}
+
+.scrapbook-photo-wrap img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.photo-back {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  padding: 30px 54px 42px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  overflow: auto;
+}
+
+.diary-back-caption {
+  margin-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.diary-back-caption .caption-actions {
+  position: absolute;
+  right: 24px;
+  bottom: 4px;
+  justify-content: flex-end;
+}
+
+.diary-back-edit {
+  background: #2563b8;
+  border-color: #2563b8;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unlock-pill {
+  max-width: 560px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1;
+}
+
+.diary-edit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.diary-back-text {
+  margin-top: 22px;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+.diary-read-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scrapbook-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.caption-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.caption-actions .tag-pill,
+.caption-actions .ghost-btn.small,
+.caption-actions .secondary-btn.small {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrapbook-caption h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+.paper-note {
+  display: block;
+  align-self: start;
+  padding: 18px;
+  margin-top: 44px;
+  background: #fff7bd;
+  border: 1px solid #e2ce65;
+  border-radius: 6px;
+  box-shadow: 0 8px 18px rgba(70, 54, 25, 0.14);
+  transform: rotate(0.6deg);
+}
+
+.paper-note .keywords {
+  margin-top: 14px;
+}
+
+.paper-note p {
+  margin-bottom: 12px;
+}
+
+.paper-note h3 {
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+
+.scrapbook-audio {
+  padding: 12px;
+  margin-top: -10px;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px dashed #b9a56b;
+  border-radius: 8px;
+}
+
+.scrapbook-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-self: end;
+  position: relative;
+  z-index: 3;
+}
+
+.story-card {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.story-card.today {
+  border-color: var(--green);
+  outline: 4px solid var(--soft-green);
+}
+
+.audience-result-card .story-image {
+  cursor: pointer;
+}
+
+.audience-result-card .story-image:focus {
+  outline: 5px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.readonly-book .scrapbook-page-actions {
+  display: none;
+}
+
+.readonly-page .scrapbook-photo-wrap {
+  cursor: default;
+}
+
+.story-body {
+  padding: 18px;
+}
+
+.summary {
+  color: var(--muted);
+}
+
+.keywords {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.keywords span {
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--soft-blue);
+  color: #153b78;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.empty-state {
+  padding: 30px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+.compact-list {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-item {
+  display: grid;
+  grid-template-columns: 86px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: var(--soft-green);
+  border-radius: 8px;
+}
+
+.compact-item img {
+  width: 86px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.search {
+  max-width: 420px;
+}
+
+.visitor-card p {
+  margin-bottom: 12px;
+}
+
+.chat-panel {
+  min-height: 560px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  overflow: auto;
+  padding-bottom: 18px;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 14px 16px;
+  border-radius: 8px;
+}
+
+.bubble.visitor {
+  align-self: flex-start;
+  background: var(--soft-blue);
+}
+
+.bubble.elder {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--green);
+}
+
+.bubble.link-bubble {
+  align-self: flex-end;
+  padding: 0;
+  background: transparent;
+}
+
+.classroom-link {
+  min-height: 52px;
+  padding: 12px 18px;
+  color: #fff;
+  background: var(--blue);
+  border: 0;
+  border-radius: 8px;
+  font-weight: 900;
+}
+
+.chat-form {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+}
+
+.mic-btn {
+  min-width: 56px;
+  padding-inline: 12px;
+}
+
+.diary-editor {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: clamp(20px, 4vw, 44px);
+  align-items: start;
+}
+
+.diary-photo-panel {
+  min-height: 500px;
+}
+
+.diary-photo-panel .scrapbook-photo-wrap,
+.diary-photo-panel .photo-back {
+  height: 100%;
+  min-height: 500px;
+}
+
+.diary-photo-panel img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.diary-editor-back {
+  padding: 54px 58px;
+}
+
+.diary-editor-back h3 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+}
+
+.diary-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.classroom {
+  min-height: calc(100vh - 170px);
+  grid-template-columns: minmax(0, 1.3fr) minmax(360px, 0.7fr);
+  padding: clamp(18px, 3vw, 38px);
+  background: #101418;
+}
+
+.photo-stage {
+  position: relative;
+  min-height: 620px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #222;
+}
+
+.photo-stage img {
+  width: 100%;
+  height: 100%;
+  max-height: 760px;
+  object-fit: contain;
+}
+
+.timer {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 10px 16px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.end-class-btn {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  z-index: 2;
+}
+
+.tools-panel {
+  box-shadow: none;
+}
+
+#drawCanvas {
+  width: 100%;
+  height: auto;
+  margin: 16px 0;
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.translate-box {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+#translationOutput {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--soft-blue);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+@media (max-width: 920px) {
+  body {
+    font-size: 18px;
+  }
+
+  .app-header,
+  .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .step-nav {
+    grid-template-columns: repeat(3, minmax(132px, 1fr));
+  }
+
+  .birthday-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .two-col,
+  .create-grid,
+  .messages-layout,
+  .classroom {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-stage {
+    min-height: 420px;
+  }
+
+  .chat-form {
+    grid-template-columns: auto 1fr;
+  }
+
+  .chat-form .secondary-btn {
+    grid-column: 1 / -1;
+  }
+
+  .scrapbook-spread {
+    grid-template-columns: 1fr;
+  }
+
+  .book-spine {
+    display: none;
+  }
+
+  .scrapbook-page,
+  .scrapbook-spread {
+    min-height: auto;
+  }
+}
