@@ -537,8 +537,6 @@ function formatUnlockDate(value) {
     year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(date);
 }
 
@@ -546,7 +544,7 @@ function getUnlockLabel(storyId) {
   const record = getUnlockRecord(storyId);
   const unlockedAt = typeof record === "string" ? null : record?.unlockedAt;
   const curatorName = typeof record === "string" ? state.profile.name : record?.curatorName;
-  return `已解鎖！您於${formatUnlockDate(unlockedAt)}和策展人${curatorName || "說故事者"}聊過它的故事。`;
+  return `您於${formatUnlockDate(unlockedAt)}和策展人${curatorName || "說故事者"}聊過它的故事。`;
 }
 
 function unlockDiary(storyId) {
