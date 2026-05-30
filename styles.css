@@ -33,6 +33,8 @@ body {
 .create-mode .step-nav,
 .audience-mode .app-header,
 .audience-mode .step-nav,
+.audience-chat-mode .app-header,
+.sticker-mode .app-header,
 .app-shell.is-hidden,
 .onboarding.is-hidden {
   display: none;
@@ -43,6 +45,14 @@ body {
 }
 
 .diary-mode .step-nav {
+  display: none;
+}
+
+.sticker-mode .step-nav {
+  display: none;
+}
+
+.audience-chat-mode .step-nav {
   display: none;
 }
 
@@ -79,7 +89,9 @@ body {
 }
 
 .onboarding-mode .login-helper,
-.create-mode .login-helper {
+.create-mode .login-helper,
+.gallery-mode .login-helper,
+.curator2-helper-mode .login-helper {
   display: grid;
 }
 
@@ -338,8 +350,8 @@ body {
   font-weight: 900;
 }
 
-.audience-mode .test-audience-btn,
-.curator2-mode .test-curator2-btn {
+.test-audience-btn.is-active,
+.test-curator2-btn.is-active {
   background: var(--blue);
   border-color: var(--blue);
   color: #fff;
@@ -1084,6 +1096,334 @@ audio {
   cursor: default;
 }
 
+.public-sticker-rail {
+  position: absolute;
+  right: 18px;
+  top: 152px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  max-width: 118px;
+}
+
+.public-sticker-rail span,
+.thanks-sticker,
+.sticker-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 8px 12px;
+  color: #5a3408;
+  background: #ffe27a;
+  border: 2px solid rgba(184, 127, 18, 0.34);
+  border-radius: 999px;
+  box-shadow: 0 8px 16px rgba(70, 45, 14, 0.14);
+  font-weight: 900;
+  text-align: center;
+}
+
+.public-sticker-rail span:nth-child(even) {
+  transform: rotate(5deg);
+}
+
+.public-sticker-rail span:nth-child(odd) {
+  transform: rotate(-4deg);
+}
+
+.sticker-envelope-btn {
+  position: absolute;
+  right: 24px;
+  bottom: 28px;
+  z-index: 4;
+  width: 92px;
+  height: 62px;
+  padding: 0;
+  background: #fff7df;
+  border: 2px solid rgba(121, 92, 54, 0.28);
+  border-radius: 6px;
+  box-shadow: 0 10px 18px rgba(54, 42, 25, 0.16);
+  cursor: pointer;
+  transform: rotate(3deg);
+}
+
+.sticker-envelope-btn,
+.sticker-envelope-btn::before,
+.sticker-envelope-btn::after {
+  pointer-events: auto;
+}
+
+.sticker-envelope-btn span {
+  pointer-events: none;
+}
+
+.sticker-envelope-btn::before,
+.sticker-envelope-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-style: solid;
+}
+
+.sticker-envelope-btn::before {
+  top: 0;
+  border-width: 0 46px 31px 46px;
+  border-color: transparent transparent rgba(213, 186, 133, 0.62) transparent;
+}
+
+.sticker-envelope-btn::after {
+  bottom: 0;
+  border-width: 31px 46px 0 46px;
+  border-color: rgba(245, 225, 184, 0.92) transparent transparent transparent;
+}
+
+.envelope-heart {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  background: #d43a38;
+  border-radius: 50%;
+  font-size: 1rem;
+  transform: translate(-50%, -50%);
+}
+
+.envelope-count {
+  position: absolute;
+  right: -8px;
+  top: -10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.sticker-inbox {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.45fr) minmax(280px, 1fr);
+  gap: 18px;
+  margin: 20px 0 26px;
+  padding: 18px;
+  background: #fff8d9;
+  border: 1px solid rgba(184, 127, 18, 0.28);
+  border-radius: 8px;
+}
+
+.sticker-inbox h3 {
+  margin-top: 4px;
+}
+
+.sticker-inbox-list {
+  display: grid;
+  gap: 12px;
+}
+
+.sticker-inbox-item {
+  display: grid;
+  grid-template-columns: auto minmax(130px, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.sticker-inbox-item small {
+  display: block;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.sticker-gift-page {
+  min-height: calc(100vh - 110px);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #fffaf0;
+}
+
+.sticker-gift-page .lead {
+  margin: 8px auto 24px;
+}
+
+.sticker-mailbox-page {
+  min-height: calc(100vh - 140px);
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #fffaf0;
+}
+
+.sticker-mailbox-list {
+  display: grid;
+  gap: 14px;
+  max-width: 920px;
+}
+
+.sticker-mailbox-item {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.sticker-mailbox-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.sticker-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  gap: 14px;
+  width: min(920px, 100%);
+  margin-bottom: 28px;
+}
+
+.sticker-choice {
+  min-height: 92px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.02rem;
+}
+
+.sticker-choice:nth-child(even) {
+  background: #d9f0ff;
+  color: #073f66;
+}
+
+.sticker-choice:nth-child(3n) {
+  background: #dbf4df;
+  color: #0d5536;
+}
+
+.note-tab-btn {
+  color: #5b4216;
+  background: #fff1a8;
+  border-color: rgba(152, 112, 28, 0.42);
+}
+
+.note-tab-btn::before {
+  content: none;
+}
+
+.note-board {
+  min-height: calc(100vh - 140px);
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 93, 55, 0.06) 0 1px, transparent 1px 34px),
+    #fffaf0;
+}
+
+.note-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(320px, 1.28fr);
+  gap: clamp(20px, 4vw, 42px);
+  align-items: start;
+}
+
+.note-photo-card,
+.note-stack-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.note-photo-card {
+  padding: 18px;
+  transform: rotate(-1.2deg);
+}
+
+.note-photo-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.note-photo-card h3 {
+  margin: 16px 0 8px;
+}
+
+.note-stack-panel {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.note-list {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.curator-note {
+  max-width: 760px;
+  padding: 20px 22px;
+  background: #fff5b8;
+  border: 1px solid rgba(190, 150, 42, 0.42);
+  border-radius: 6px;
+  box-shadow: 0 10px 20px rgba(70, 50, 20, 0.12);
+  transform: rotate(-0.6deg);
+}
+
+.curator-note:nth-child(even) {
+  transform: rotate(0.7deg);
+}
+
+.curator-note p {
+  margin-bottom: 14px;
+}
+
+.curator-note small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.curator-note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.curator-note-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.curator-note-actions .small {
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.note-form {
+  display: grid;
+  gap: 14px;
+}
+
 .story-body {
   padding: 18px;
 }
@@ -1146,6 +1486,12 @@ audio {
   margin-bottom: 12px;
 }
 
+.visitor-card .secondary-btn,
+.visitor-card .primary-btn {
+  width: 100%;
+  margin-top: 16px;
+}
+
 .chat-panel {
   min-height: 560px;
   display: grid;
@@ -1182,6 +1528,22 @@ audio {
   align-self: flex-end;
   padding: 0;
   background: transparent;
+}
+
+.audience-chat-mode .bubble.visitor {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--green);
+}
+
+.audience-chat-mode .bubble.elder {
+  align-self: flex-start;
+  color: var(--ink);
+  background: var(--soft-blue);
+}
+
+.audience-chat-mode .bubble.link-bubble {
+  align-self: flex-start;
 }
 
 .classroom-link {
@@ -1338,8 +1700,26 @@ audio {
   .create-grid,
   .create-story-layout,
   .messages-layout,
+  .note-layout,
   .classroom {
     grid-template-columns: 1fr;
+  }
+
+  .sticker-inbox,
+  .sticker-inbox-item,
+  .sticker-mailbox-item,
+  .sticker-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-sticker-rail {
+    top: auto;
+    right: 14px;
+    bottom: 156px;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    max-width: calc(100% - 28px);
+    overflow: hidden;
   }
 
   .photo-stage {
