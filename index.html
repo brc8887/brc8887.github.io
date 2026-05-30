@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>故事相冊 Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=20260529-create-helper" />
+    <link rel="stylesheet" href="styles.css?v=20260530-heron-helper" />
   </head>
   <body>
     <section class="onboarding" id="onboarding">
@@ -349,14 +349,46 @@
         </div>
       </section>
 
+      <section class="view" id="curatorNotes">
+        <div class="page-band note-board">
+          <div class="section-head">
+            <div>
+              <p class="section-label">策展人便箋夾</p>
+              <h2>給這張照片的便箋</h2>
+            </div>
+            <button class="ghost-btn" id="notesBackBtn" type="button">回到相冊</button>
+          </div>
+          <div class="note-layout">
+            <aside class="note-photo-card">
+              <img id="notesStoryImage" alt="留言照片" />
+              <h3 id="notesStoryTitle">照片標題</h3>
+              <p id="notesStorySummary">照片故事摘要</p>
+            </aside>
+            <section class="note-stack-panel">
+              <div class="note-list" id="curatorNoteList"></div>
+              <form class="note-form" id="curatorNoteForm">
+                <label>
+                  留下一張便箋
+                  <textarea id="curatorNoteInput" rows="4" placeholder="寫下你想到的故事、記憶或想回應的地方..."></textarea>
+                </label>
+                <button class="secondary-btn" type="submit">貼上便箋</button>
+              </form>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="messages">
         <div class="page-band messages-layout">
           <aside class="panel visitor-card">
-            <p class="section-label">私訊對象</p>
-            <h2>Alex</h2>
-            <p>中文程度：中級</p>
-            <p>可理解：國語，少量台語詞</p>
-            <p>感興趣：老照片裡的市場、食物、家庭故事</p>
+            <p class="section-label" id="messageContactLabel">私訊對象</p>
+            <h2 id="messageContactName">Alex</h2>
+            <div id="messageContactMeta">
+              <p>中文程度：中級</p>
+              <p>可理解：國語，少量台語詞</p>
+              <p>感興趣：老照片裡的市場、食物、家庭故事</p>
+            </div>
+            <button class="secondary-btn is-hidden" id="visitAlbumBtn">參觀相冊</button>
             <button class="primary-btn" id="inviteBtn">發送 15 分鐘邀請</button>
           </aside>
           <section class="chat-panel">
@@ -394,6 +426,35 @@
               <p id="translationOutput">This photo was taken at an old market.</p>
             </div>
           </aside>
+        </div>
+      </section>
+
+      <section class="view" id="stickers">
+        <div class="page-band sticker-gift-page">
+          <p class="section-label">感謝貼紙</p>
+          <h2>想送一張貼紙謝謝策展人嗎？</h2>
+          <p class="lead" id="stickerStoryHint">這張貼紙會先送到策展人手上，由策展人決定要不要公開貼到相冊頁邊。</p>
+          <div class="sticker-choice-grid" id="stickerChoiceGrid">
+            <button type="button" class="sticker-choice" data-sticker-label="謝謝您">謝謝您</button>
+            <button type="button" class="sticker-choice" data-sticker-label="好溫暖">好溫暖</button>
+            <button type="button" class="sticker-choice" data-sticker-label="很喜歡這個故事">很喜歡這個故事</button>
+            <button type="button" class="sticker-choice" data-sticker-label="我也想起以前">我也想起以前</button>
+            <button type="button" class="sticker-choice" data-sticker-label="下次還想聽">下次還想聽</button>
+          </div>
+          <button class="ghost-btn" id="skipStickerBtn" type="button">先不送，回到私訊</button>
+        </div>
+      </section>
+
+      <section class="view" id="stickerMailbox">
+        <div class="page-band sticker-mailbox-page">
+          <div class="section-head">
+            <div>
+              <p class="section-label">感謝貼紙信封</p>
+              <h2 id="stickerMailboxTitle">這張照片收到的貼紙</h2>
+            </div>
+            <button class="ghost-btn" id="stickerMailboxBackBtn" type="button">回到相冊</button>
+          </div>
+          <div class="sticker-mailbox-list" id="stickerMailboxList"></div>
         </div>
       </section>
     </main>
