@@ -4,17 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>故事相冊 Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=20260530-heron-helper" />
+    <link rel="stylesheet" href="styles.css?v=20260602-classroom-eraser" />
   </head>
   <body>
     <section class="onboarding" id="onboarding">
       <div class="login-card">
         <p class="section-label">第一次使用</p>
-        <h1>建立說故事者資料</h1>
+        <h1>建立策展人資料</h1>
         <nav class="breadcrumb" aria-label="登錄進度">
           <button class="crumb active" data-login-step="0">1 名稱</button>
           <button class="crumb" data-login-step="1">2 性別</button>
-          <button class="crumb" data-login-step="2">3 生日</button>
+          <button class="crumb" data-login-step="2">3 年代</button>
         </nav>
 
         <form id="loginForm">
@@ -37,22 +37,13 @@
             </label>
           </section>
           <section class="login-step" data-step="2">
-            <p class="birthday-label">您的生日是？</p>
+            <p class="birthday-label">您的出生年代是？</p>
             <div class="birthday-fields">
               <label>
-                年
+                年代
                 <select id="birthYear"></select>
               </label>
-              <label>
-                月
-                <select id="birthMonth"></select>
-              </label>
-              <label>
-                日
-                <select id="birthDay"></select>
-              </label>
             </div>
-            <p class="birthday-hint" id="birthdayHint">請依序選擇出生年、月、日。</p>
           </section>
 
           <div class="login-actions">
@@ -75,16 +66,16 @@
 
     <header class="app-header app-shell">
       <div>
-        <p class="eyebrow">青銀交流｜照片作為聊天主題</p>
-        <h1>故事相冊</h1>
+        <p class="eyebrow">透過「照片」與「生命故事」策展個人生命史</p>
+        <h1>生命史策展人</h1>
       </div>
       <div class="status-chip" id="onlineStatus">目前離線</div>
     </header>
 
     <nav class="step-nav app-shell" aria-label="主要流程">
-      <button class="nav-btn active" data-view="gallery">1 我的相冊</button>
-      <button class="nav-btn" data-view="live">2 接課</button>
-      <button class="nav-btn" data-view="messages">3 私訊</button>
+      <button class="nav-btn active" data-view="gallery">我的相冊</button>
+      <button class="nav-btn" data-view="live">接課</button>
+      <button class="nav-btn" data-view="messages">私訊</button>
     </nav>
 
     <main class="app-shell">
@@ -93,12 +84,12 @@
           <div>
             <p class="section-label">長輩登錄</p>
             <h2>用很少的資料開始</h2>
-            <p class="lead">這個 prototype 把「申請成為老師」改成「建立說故事者資料」。重點不是履歷，而是今天想分享什麼生命經驗。</p>
+            <p class="lead">這個 prototype 把「申請成為老師」改成「建立策展人資料」。重點不是履歷，而是今天想分享什麼生命經驗。</p>
           </div>
           <form class="panel" id="profileForm">
             <label>
               顯示名稱
-              <input id="elderName" type="text" value="陳阿姨" />
+              <input id="elderName" type="text" value="吳阿元" />
             </label>
             <label>
               我比較習慣使用
@@ -307,12 +298,12 @@
         <div class="page-band two-col">
           <div>
             <p class="section-label">即時接課</p>
-            <h2>上線時才接收私訊</h2>
-            <p class="lead">這裡模擬 on-demand 模式：長輩按下上線後，只展示今天想聊的照片，降低排程和訊息壓力。</p>
+            <h2 id="liveHeading">目前不開放私訊</h2>
+            <p class="lead live-lead" id="liveLead">目前不接受私訊，按下「打開接課」按鈕，讓觀眾們可以看見您公開展出的照片並且私訊您提出上課興趣！</p>
             <button class="primary-btn" id="toggleOnlineBtn">打開接課</button>
           </div>
           <div class="panel">
-            <h3>今天開放聊天的照片</h3>
+            <h3>所有照片的聊天開放狀態</h3>
             <div id="todayList" class="compact-list"></div>
           </div>
         </div>
@@ -333,7 +324,7 @@
           <div class="section-head">
             <div>
               <p class="section-label">觀眾視角</p>
-              <h2>生命故事相冊</h2>
+              <h2 id="audienceAlbumTitle">生命故事相冊</h2>
             </div>
             <div class="scrapbook-actions">
               <button class="ghost-btn" id="audienceBackToSearchBtn">回到搜尋</button>
@@ -381,7 +372,7 @@
       <section class="view" id="messages">
         <div class="page-band messages-layout">
           <aside class="panel visitor-card">
-            <p class="section-label" id="messageContactLabel">私訊對象</p>
+            <p class="section-label" id="messageContactLabel">觀眾</p>
             <h2 id="messageContactName">Alex</h2>
             <div id="messageContactMeta">
               <p>中文程度：中級</p>
@@ -393,7 +384,7 @@
           </aside>
           <section class="chat-panel">
             <div class="chat-log" id="chatLog">
-              <div class="bubble visitor">您好，我想聽「杜鵑花」這張照片的故事，可以嗎？</div>
+              <div class="bubble visitor">您好，我想聽「黑冠麻鷺」這張照片的故事，可以嗎？</div>
               <div class="bubble elder">可以，我今天上線，先聊 15 分鐘。</div>
             </div>
             <form class="chat-form" id="chatForm">
@@ -416,14 +407,15 @@
             <h2>聊天輔助</h2>
             <button class="secondary-btn" id="startTimerBtn">開始 15 分鐘</button>
             <button class="ghost-btn" id="clearCanvasBtn">清除畫板</button>
+            <button class="ghost-btn" id="eraserCanvasBtn" aria-pressed="false">橡皮擦</button>
             <canvas id="drawCanvas" width="520" height="280" aria-label="繪圖板"></canvas>
             <div class="translate-box">
               <label>
                 文字聊天室與即時翻譯
-                <textarea id="translateText" rows="4">這張照片是在以前的市場拍的。</textarea>
+                <textarea id="translateText" rows="4">這是一隻黑冠麻鷺</textarea>
               </label>
               <button class="secondary-btn" id="translateBtn">翻譯成英文</button>
-              <p id="translationOutput">This photo was taken at an old market.</p>
+              <p id="translationOutput">This is a Malayan night heron</p>
             </div>
           </aside>
         </div>
