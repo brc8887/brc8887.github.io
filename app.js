@@ -1,6 +1,6 @@
 const state = {
   profile: {
-    name: "",
+    name: "吳阿元",
     gender: "",
     birthday: "",
     language: "國語為主，可以穿插台語",
@@ -154,10 +154,13 @@ const els = {
   diarySaveBtn: document.querySelector("#diarySaveBtn"),
   todayList: document.querySelector("#todayList"),
   toggleOnlineBtn: document.querySelector("#toggleOnlineBtn"),
+  liveHeading: document.querySelector("#liveHeading"),
+  liveLead: document.querySelector("#liveLead"),
   searchInput: document.querySelector("#searchInput"),
   searchResults: document.querySelector("#searchResults"),
   audienceSearchPanel: document.querySelector("#audienceSearchPanel"),
   audienceBookPanel: document.querySelector("#audienceBookPanel"),
+  audienceAlbumTitle: document.querySelector("#audienceAlbumTitle"),
   audienceScrapbookSpread: document.querySelector("#audienceScrapbookSpread"),
   audienceBackToSearchBtn: document.querySelector("#audienceBackToSearchBtn"),
   audiencePrevPageBtn: document.querySelector("#audiencePrevPageBtn"),
@@ -191,6 +194,7 @@ const els = {
   timer: document.querySelector("#timer"),
   drawCanvas: document.querySelector("#drawCanvas"),
   clearCanvasBtn: document.querySelector("#clearCanvasBtn"),
+  eraserCanvasBtn: document.querySelector("#eraserCanvasBtn"),
   translateBtn: document.querySelector("#translateBtn"),
   translateText: document.querySelector("#translateText"),
   translationOutput: document.querySelector("#translationOutput"),
@@ -340,6 +344,7 @@ function showView(id) {
   document.body.classList.toggle("create-mode", id === "create");
   document.body.classList.toggle("diary-mode", id === "diary");
   document.body.classList.toggle("gallery-mode", id === "gallery");
+  document.body.classList.toggle("live-mode", id === "live");
   document.body.classList.toggle("sticker-mode", id === "stickers");
   document.body.classList.toggle("curator2-helper-mode", id === "audience" && state.readonlySource === "curator2");
   els.views.forEach((view) => view.classList.toggle("active", view.id === id));
@@ -355,6 +360,9 @@ function showView(id) {
   if (id === "stickerMailbox") renderStickerMailbox();
   if (id === "messages") renderMessages();
   if (id === "gallery") updateGalleryHelperText();
+  if (id === "live" && els.loginHelperText) {
+    els.loginHelperText.textContent = "您可以在右邊選擇今天要公開展出的照片！";
+  }
   if (id === "audience" && state.readonlySource === "curator2" && els.loginHelperText) {
     els.loginHelperText.textContent = "喜歡這張照片嗎？要不要給這位策展人寫一張便籤？";
   }
@@ -397,6 +405,10 @@ function updateCreateHelperText() {
     els.loginHelperText.textContent = state.selectedImage
       ? "照片新增成功！這張照片好有趣，不知道策展人有什麼故事？"
       : "請策展人幫我點一下中間藍色的＋符號，選一張你想要展示的照片！";
+    if (state.selectedImage) {
+      els.loginHelper?.classList.remove("is-collapsed");
+      els.loginHelperAvatar?.setAttribute("aria-label", "阿義小助手已展開");
+    }
     return;
   }
   if (state.createStep === 1) {
@@ -476,7 +488,7 @@ function showLoginStep(step) {
   const helperLines = [
     "請問策展人，觀眾們應該怎麼稱呼您？",
     "請問策展人的性別是？",
-    "請問策展人的生日是？",
+    "請問策展人的出生年代是？",
   ];
   els.loginSteps.forEach((panel) => {
     panel.classList.toggle("active", Number(panel.dataset.step) === state.loginStep);
@@ -500,12 +512,13 @@ function showOnboarding() {
   document.body.classList.remove("create-mode");
   document.body.classList.remove("diary-mode");
   document.body.classList.remove("gallery-mode");
+  document.body.classList.remove("live-mode");
   document.body.classList.remove("sticker-mode");
   document.body.classList.remove("curator2-helper-mode");
   els.onboarding.classList.remove("is-hidden");
   els.appShell.forEach((node) => node.classList.add("is-hidden"));
   els.testToolbox.classList.add("is-hidden");
-  els.loginName.value = "";
+  els.loginName.value = "吳阿元";
   showLoginStep(0);
 }
 
@@ -518,6 +531,7 @@ function showApp() {
   document.body.classList.remove("create-mode");
   document.body.classList.remove("diary-mode");
   document.body.classList.remove("gallery-mode");
+  document.body.classList.remove("live-mode");
   document.body.classList.remove("sticker-mode");
   document.body.classList.remove("curator2-helper-mode");
   els.onboarding.classList.add("is-hidden");
@@ -527,7 +541,7 @@ function showApp() {
 }
 
 function completeLogin() {
-  state.profile.name = els.loginName.value.trim() || "說故事者";
+  state.profile.name = els.loginName.value.trim() || "吳阿元";
   state.profile.gender = els.loginGender.value;
   state.profile.birthday = getBirthdayValue();
   state.onboarded = true;
@@ -556,7 +570,6 @@ function handleLoginSubmit(event) {
     return;
   }
   if (!getBirthdayValue()) {
-    els.birthdayHint.textContent = "請完整選擇出生年、月、日。";
     els.birthYear.focus();
     return;
   }
@@ -568,8 +581,7 @@ function padNumber(value) {
 }
 
 function getBirthdayValue() {
-  if (!els.birthYear.value || !els.birthMonth.value || !els.birthDay.value) return "";
-  return `${els.birthYear.value}-${padNumber(els.birthMonth.value)}-${padNumber(els.birthDay.value)}`;
+  return els.birthYear.value || "";
 }
 
 function fillSelect(select, values, placeholder) {
@@ -583,53 +595,32 @@ function fillSelect(select, values, placeholder) {
 }
 
 function setupBirthdayFields() {
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let year = currentYear - 55; year >= currentYear - 110; year -= 1) {
-    years.push({ value: year, label: `${year} 年` });
+  const decades = [];
+  for (let year = 1920; year <= 2010; year += 10) {
+    decades.push({ value: `${year}s`, label: `${year} 年代` });
   }
-  fillSelect(els.birthYear, years, "選擇年");
-  fillSelect(
-    els.birthMonth,
-    Array.from({ length: 12 }, (_, index) => ({ value: index + 1, label: `${index + 1} 月` })),
-    "選擇月"
-  );
-  updateBirthdayDays();
-}
-
-function updateBirthdayDays() {
-  const year = Number(els.birthYear.value) || 1940;
-  const month = Number(els.birthMonth.value) || 1;
-  const selectedDay = Number(els.birthDay.value);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  fillSelect(
-    els.birthDay,
-    Array.from({ length: daysInMonth }, (_, index) => ({ value: index + 1, label: `${index + 1} 日` })),
-    "選擇日"
-  );
-  if (selectedDay && selectedDay <= daysInMonth) els.birthDay.value = selectedDay;
+  fillSelect(els.birthYear, decades, "選擇年代");
 }
 
 function setBirthdayFields(value) {
   if (!value) return;
-  const [year, month, day] = value.split("-");
-  els.birthYear.value = year || "";
-  els.birthMonth.value = month ? String(Number(month)) : "";
-  updateBirthdayDays();
-  els.birthDay.value = day ? String(Number(day)) : "";
+  const year = Number(String(value).slice(0, 4));
+  if (String(value).endsWith("s")) {
+    els.birthYear.value = value;
+  } else if (year) {
+    els.birthYear.value = `${Math.floor(year / 10) * 10}s`;
+  }
 }
 
 function getProfileAge() {
   if (!state.profile.birthday) return "未填";
-  const birthday = new Date(state.profile.birthday);
-  if (Number.isNaN(birthday.getTime())) return "未填";
-  const today = new Date();
-  let age = today.getFullYear() - birthday.getFullYear();
-  const hasHadBirthday =
-    today.getMonth() > birthday.getMonth() ||
-    (today.getMonth() === birthday.getMonth() && today.getDate() >= birthday.getDate());
-  if (!hasHadBirthday) age -= 1;
-  return `${age} 歲`;
+  const year = Number(String(state.profile.birthday).slice(0, 4));
+  if (!year) return "未填";
+  const currentDecade = Math.floor(new Date().getFullYear() / 10) * 10;
+  const birthDecade = Math.floor(year / 10) * 10;
+  const bandStart = Math.max(0, currentDecade - birthDecade);
+  if (bandStart >= 100) return "100 歲以上";
+  return `${bandStart}–${bandStart + 9} 歲`;
 }
 
 function dataUrlFromFile(file) {
@@ -701,13 +692,8 @@ function renderPreviews() {
   });
 }
 
-function makeKeywords(text) {
-  const base = text
-    .replace(/[，。！？、；：「」『』（）()]/g, " ")
-    .split(/\s+/)
-    .filter((word) => word.length >= 2)
-    .slice(0, 5);
-  return [...new Set(base.length ? base : ["生命故事", "照片", "聊天"])];
+function makeKeywords() {
+  return ["標籤1", "標籤2", "標籤3", "標籤4", "標籤5"];
 }
 
 function escapeHtml(value) {
@@ -744,7 +730,7 @@ function getUnlockLabel(storyId) {
   const record = getUnlockRecord(storyId);
   const unlockedAt = typeof record === "string" ? null : record?.unlockedAt;
   const curatorName = typeof record === "string" ? state.profile.name : record?.curatorName;
-  return `您於${formatUnlockDate(unlockedAt)}和策展人${curatorName || "說故事者"}聊過它的故事。`;
+  return `您於${formatUnlockDate(unlockedAt)}和策展人${curatorName || "吳阿元"}聊過它的故事。`;
 }
 
 function unlockDiary(storyId) {
@@ -1128,7 +1114,7 @@ function makeReadonlyScrapbookPage(story) {
               <h3>${story.title}</h3>
               <div class="caption-actions">
                 ${isCuratorTwo ? "" : '<button class="tag-pill interest-btn" type="button">有興趣</button>'}
-                ${isCuratorTwo ? '<button class="ghost-btn small note-tab-btn" type="button">便箋</button>' : ""}
+                ${isCuratorTwo ? '<button class="ghost-btn small note-tab-btn" type="button" aria-label="打開便箋夾"><span>便箋</span></button>' : ""}
                 <button class="ghost-btn small audience-diary-btn" type="button">閱讀日記</button>
               </div>
             </div>
@@ -1411,7 +1397,17 @@ function showAudienceSearch() {
   renderSearch();
 }
 
+function updateAudienceAlbumTitle() {
+  if (!els.audienceAlbumTitle) return;
+  const titleName =
+    state.readonlySource === "curator2" || state.readonlySource === "audience-curator2"
+      ? "張秀霞"
+      : state.profile.name || "吳阿元";
+  els.audienceAlbumTitle.textContent = `${titleName}的生命故事相冊`;
+}
+
 function renderAudienceBook() {
+  updateAudienceAlbumTitle();
   const sourceStories = getReadonlyStories();
   els.audienceScrapbookSpread.innerHTML = "";
   const pageCount = Math.max(1, Math.ceil(sourceStories.length / 2));
@@ -1507,23 +1503,29 @@ function handleCuratorNoteAction(event) {
 function renderLive() {
   els.onlineStatus.textContent = state.online ? "目前上線接課" : "目前離線";
   els.onlineStatus.classList.toggle("online", state.online);
+  els.liveHeading.textContent = state.online ? "目前開放私訊" : "目前不開放私訊";
+  els.liveLead.textContent = state.online
+    ? "目前開放私訊，觀眾們可以看見您公開展出的照片並且私訊您提出上課興趣。"
+    : "目前不接受私訊，按下「打開接課」按鈕，讓觀眾們可以看見您公開展出的照片並且私訊您提出上課興趣！";
   els.toggleOnlineBtn.textContent = state.online ? "關閉接課" : "打開接課";
   els.toggleOnlineBtn.classList.toggle("danger-state", state.online);
   els.todayList.innerHTML = "";
-  const todayStories = state.stories.filter((story) => story.today);
-  if (!todayStories.length) {
-    els.todayList.innerHTML = `<p class="empty-state">${state.stories.length ? "目前沒有開放聊天的照片。" : "相冊裡還沒有照片。"}</p>`;
+  if (!state.stories.length) {
+    els.todayList.innerHTML = `<p class="empty-state">相冊裡還沒有照片。</p>`;
   }
-  todayStories.forEach((story) => {
+  state.stories.forEach((story) => {
     const item = document.createElement("div");
-    item.className = "compact-item";
+    item.className = `compact-item ${story.today ? "is-open" : "is-closed"}`;
     item.innerHTML = `
       <img src="${story.image}" alt="${story.title}" />
-      <strong>${story.title}</strong>
-      <button class="danger-btn small" type="button">取消今天想聊</button>
+      <div>
+        <strong>${story.title}</strong>
+        <span>${story.today ? "今天開放聊天" : "今天不開放"}</span>
+      </div>
+      <button class="${story.today ? "danger-btn" : "primary-btn"} small" type="button">${story.today ? "關閉" : "開放"}</button>
     `;
     item.querySelector("button").addEventListener("click", () => {
-      story.today = false;
+      story.today = !story.today;
       saveState();
       renderGallery();
       renderLive();
@@ -1577,7 +1579,7 @@ function isCuratorTwoStory(storyId) {
 function getStoryCuratorProfile(storyId) {
   if (isCuratorTwoStory(storyId)) return curatorTwoProfile;
   return {
-    name: state.profile.name || "說故事者",
+    name: state.profile.name || "吳阿元",
     gender: state.profile.gender || "未填",
     age: getProfileAge(),
   };
@@ -1604,7 +1606,7 @@ function renderMessages() {
     return;
   }
 
-  els.messageContactLabel.textContent = "私訊對象";
+  els.messageContactLabel.textContent = "觀眾";
   els.messageContactName.textContent = "Alex";
   els.messageContactMeta.innerHTML = `
     <p>中文程度：中級</p>
@@ -1614,7 +1616,7 @@ function renderMessages() {
   els.visitAlbumBtn.classList.add("is-hidden");
   els.inviteBtn.classList.remove("is-hidden");
   els.chatInput.placeholder = "輸入回覆...";
-  addChatBubble("您好，我想聽「杜鵑花」這張照片的故事，可以嗎？", "visitor");
+  addChatBubble("您好，我想聽「黑冠麻鷺」這張照片的故事，可以嗎？", "visitor");
   addChatBubble("可以，我今天上線，先聊 15 分鐘。", "elder");
 }
 
@@ -1747,10 +1749,20 @@ function startTimer() {
 function setupCanvas() {
   const canvas = els.drawCanvas;
   const context = canvas.getContext("2d");
-  context.lineWidth = 5;
   context.lineCap = "round";
-  context.strokeStyle = "#2456a6";
   let drawing = false;
+  let erasing = false;
+
+  function applyTool() {
+    context.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+    context.lineWidth = erasing ? 24 : 5;
+    context.strokeStyle = erasing ? "rgba(0, 0, 0, 1)" : "#2456a6";
+    if (els.eraserCanvasBtn) {
+      els.eraserCanvasBtn.classList.toggle("is-active", erasing);
+      els.eraserCanvasBtn.setAttribute("aria-pressed", String(erasing));
+      els.eraserCanvasBtn.textContent = erasing ? "畫筆" : "橡皮擦";
+    }
+  }
 
   function point(event) {
     const rect = canvas.getBoundingClientRect();
@@ -1763,6 +1775,7 @@ function setupCanvas() {
 
   function start(event) {
     drawing = true;
+    applyTool();
     const p = point(event);
     context.beginPath();
     context.moveTo(p.x, p.y);
@@ -1788,11 +1801,20 @@ function setupCanvas() {
   canvas.addEventListener("touchmove", move, { passive: false });
   window.addEventListener("touchend", stop);
   els.clearCanvasBtn.addEventListener("click", () => context.clearRect(0, 0, canvas.width, canvas.height));
+  els.eraserCanvasBtn?.addEventListener("click", () => {
+    erasing = !erasing;
+    applyTool();
+  });
+  applyTool();
 }
 
 function translateDemo() {
   const text = els.translateText.value.trim();
   if (!text) return;
+  if (text === "這是一隻黑冠麻鷺") {
+    els.translationOutput.textContent = "This is a Malayan night heron";
+    return;
+  }
   const dictionary = [
     ["這張照片", "This photo"],
     ["以前", "old"],
@@ -1826,8 +1848,6 @@ function bindEvents() {
     els.testToolboxToggle.setAttribute("aria-expanded", String(isOpen));
     els.testToolboxToggle.setAttribute("aria-label", isOpen ? "收合測試工具" : "開啟測試工具");
   });
-  els.birthYear.addEventListener("change", updateBirthdayDays);
-  els.birthMonth.addEventListener("change", updateBirthdayDays);
   els.loginCrumbs.forEach((crumb) => {
     crumb.addEventListener("click", () => showLoginStep(Number(crumb.dataset.loginStep)));
   });
